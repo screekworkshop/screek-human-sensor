@@ -1,0 +1,175 @@
+esphome:
+  name: screek-humen-dectet-1w
+  comment: Screek Human Presence Sensor 24GHz PS-HPS
+  friendly_name: Screek Human Presence Sensor
+  name_add_mac_suffix: True
+  platformio_options:
+    board_build.flash_mode: dio
+  project: 
+    name: Screek.Human_Presence_Sensor
+    version: 1W
+
+external_components:
+  - source: screek-mod-components
+  
+esp32:
+  board: esp32-c3-devkitm-1
+  
+logger:
+  
+api:
+
+ota:
+  password: "YOUR_OTA_PASSWORD"
+
+wifi:
+  # ssid: !secret wifi_ssid
+  # password: !secret wifi_password
+  # fast_connect: True
+
+  power_save_mode: NONE
+  # output_power: 20dB
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "SCREEK HUMAN-SENSOR"
+
+captive_portal:
+
+web_server:
+  port: 80
+
+binary_sensor:
+  - platform: status
+    name: Online
+    id: ink_ha_connected
+  - platform: ld2410
+    has_target:
+      name: Presence
+    has_moving_target:
+      name: Moving Target
+    has_still_target:
+      name: Still Target
+
+sensor:
+  - platform: template
+    id: sys_esp_temperature
+    name: ESP Temperature
+    lambda: return temperatureRead();
+    unit_of_measurement: °C
+    device_class: TEMPERATURE
+    update_interval: 30s
+    entity_category: "diagnostic"
+  - platform: uptime
+    name: Uptime
+    id: sys_uptime
+    update_interval: 10s
+  - platform: wifi_signal 
+    name: RSSI
+    id: wifi_signal_db
+    update_interval: 1s
+    entity_category: "diagnostic"
+  - platform: template
+    id: esp_memory
+    icon: mdi:memory
+    name: ESP Free Memory
+    lambda: return heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024;
+    unit_of_measurement: 'kB'
+    state_class: measurement
+    entity_category: "diagnostic"
+  - platform: ld2410
+    moving_distance:
+      name : Moving Distance
+      id: moving_distance
+    still_distance:
+      name: Still Distance
+      id: still_distance
+    moving_energy:
+      name: Move Energy
+    still_energy:
+      name: Still Energy
+    detection_distance:
+      name: Detection Distance
+    light:
+      name: Sun Light
+
+light:
+  - platform: status_led
+    name: sys_status
+    pin: GPIO12
+    internal: True
+    restore_mode: ALWAYS_OFF
+  - platform: status_led
+    name: sys_status
+    pin: GPIO13
+    internal: True
+    restore_mode: ALWAYS_OFF
+
+time:
+  - platform: sntp
+    id: time_now
+    servers: 
+      - ntp.aliyun.com      
+
+uart:
+  id: uart1
+  tx_pin: GPIO5
+  rx_pin: GPIO4
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+ld2410:
+  timeout: 150s
+  id: ld2410_radar
+  # max_move_distance : 6m
+  # max_still_distance: 0.75m
+  # g0_move_threshold: 10
+  # g0_still_threshold: 20
+  # g1_move_threshold: 10
+  # g1_still_threshold: 20
+  # g2_move_threshold: 20
+  # g2_still_threshold: 21
+  # g3_move_threshold: 30
+  # g3_still_threshold: 31
+  # g4_move_threshold: 40
+  # g4_still_threshold: 41
+  # g5_move_threshold: 50
+  # g5_still_threshold: 51
+  # g6_move_threshold: 60
+  # g6_still_threshold: 61
+  # g7_move_threshold: 70
+  # g7_still_threshold: 71
+  # g8_move_threshold: 80
+  # g8_still_threshold: 81
+
+button:
+  - platform: template
+    name: "Enable LD2410 BLE"
+    entity_category: "config"
+    icon: mdi:bluetooth
+    on_press:
+      lambda: |-
+        id(ld2410_radar) -> ble_control(true);
+  - platform: template
+    name: "Disable LD2410 BLE"
+    entity_category: "config"
+    icon: mdi:bluetooth-off
+    on_press:
+      lambda: |-
+        id(ld2410_radar) -> ble_control(false);
+  - platform: template
+    name: "LD2410 Reboot"
+    icon: mdi:radar
+    entity_category: "config"
+    on_press:
+      lambda: |-
+        // auto* radar = LD2410Component::get(ld2410); 
+        // radar -> roboot();
+        id(ld2410_radar) -> reboot();
+  - platform: restart
+    icon: mdi:power-cycle
+    name: "ESP Reboot"
+  - platform: factory_reset
+    disabled_by_default: True
+    name: Factory Reset
+    id: factory_reset_all
