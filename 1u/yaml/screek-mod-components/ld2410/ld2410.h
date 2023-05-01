@@ -112,25 +112,14 @@ class LD2410Component : public Component, public uart::UARTDevice {
 
   int32_t last_periodic_millis = millis();
 
-  /// @brief 上次改变工程模式的时间，用来防止改变频率太高了。(23年3月13日_18时07分_)
   int32_t last_change_fatory_mode_millis = 0;
   
- // 增加一些额外的命令，比如重启，开关蓝牙。(23年3月13日_14时44分_)
- // https://github.com/rain931215/ESPHome-LD2410/blob/main/ld2410_uart.h
- 
-  /// 恢复出厂设置！(23年3月13日_14时48分_)
   void factoryReset();
 
-  // 重启(23年3月13日_14时48分_)
   void reboot();
   
-  /// @brief  蓝牙开关
-  /// (23年3月13日_15时22分_)
   void ble_control(bool enable);
 
-  /// @brief 开关工程模式
-  /// @param enable 开关
-  /// 用来快速切换工程模式用的。(23年3月13日_17时59分_)
   void factory_mode(bool enable);
 
  protected:

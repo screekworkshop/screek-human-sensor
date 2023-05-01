@@ -22,8 +22,7 @@ void LD2410Component::dump_config() {
   LOG_SENSOR("  ", "Still Energy", this->still_target_energy_sensor_);
   LOG_SENSOR("  ", "Detection Distance", this->detection_distance_sensor_);
 
-  // 回显光线模块设置(23年3月13日_17时28分_)
-    LOG_SENSOR("  ", "Light", this->light_sensor_);
+  LOG_SENSOR("  ", "Light", this->light_sensor_);
 #endif
   this->set_config_mode_(true);
   this->get_version_();
@@ -36,7 +35,7 @@ void LD2410Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up LD2410...");
   // ESP_LOGCONFIG(TAG, "Apply screek patch...");
   this->set_config_mode_(true);
-  // 使用蓝牙配置，取消这里的参数定义选项。(23年3月10日_20时50分_)
+
   /*
   this->set_max_distances_timeout_(this->max_move_distance_, this->max_still_distance_, this->timeout_);
   // Configure Gates sensitivity
@@ -53,8 +52,6 @@ void LD2410Component::setup() {
   this->get_version_();
   this->set_config_mode_(false);
 
-  // 开启工程模式！(23年3月13日_18时03分_)
-  // 因为会自动开启，这里就不太合适继续需要了。
   // this->factory_mode(true);
 
   ESP_LOGCONFIG(TAG, "Firmware Version : %u.%u.%u%u%u%u", this->version_[0], this->version_[1], this->version_[2],
@@ -71,7 +68,6 @@ void LD2410Component::loop() {
   }
 }
 
-// 发送命令给雷达！(23年3月13日_14时46分_)
 void LD2410Component::send_command_(uint8_t command, uint8_t *command_value, int command_value_len) {
   // lastCommandSuccess->publish_state(false);
 
@@ -100,7 +96,6 @@ void LD2410Component::send_command_(uint8_t command, uint8_t *command_value, int
   delay(50);  // NOLINT
 }
 
-// https://cdn.arduino.cc/reference/en/language/functions/math/map/
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -186,7 +181,7 @@ void LD2410Component::handle_periodic_data_(uint8_t *buffer, int len) {
   if (this->light_sensor_ != nullptr) { 
     int data_type = buffer[6];
     int new_light = -1;
-    if (data_type == 0x01){ // 0x01 = factory mode
+    if (data_type == 0x01){ // 0x01 = 工程模式！ 
       new_light = buffer[37];
 
       new_light = map(new_light, 85, 255, 0, 100);
@@ -196,10 +191,14 @@ void LD2410Component::handle_periodic_data_(uint8_t *buffer, int len) {
       if (new_light > 100){
         new_light = 100;
       }
+
+      ESP_LOGD(TAG,"LD2410 Sun Light: %d%%", new_light);
     }else{
       int32_t now_millis = millis();
+
       if (now_millis - last_change_fatory_mode_millis > 2000){
         ESP_LOGD(TAG,"Normal mode no light, change to factory mode");
+
         this->factory_mode(true);
         last_change_fatory_mode_millis = now_millis;
       }
@@ -357,7 +356,6 @@ void LD2410Component::set_gate_threshold_(uint8_t gate, uint8_t motionsens, uint
   this->send_command_(CMD_GATE_SENS, value, 18);
 }
 
-// 额外增加的命令到这里去(23年3月13日_14时57分_)
 void LD2410Component::factoryReset()
   {
     this->set_config_mode_(true);
@@ -387,9 +385,9 @@ void LD2410Component::ble_control(bool enable)
   if (enable){
     cmd_value[0] = 0x01;
 
-    ESP_LOGD(TAG, "Disable BLE...");
-  }else{
     ESP_LOGD(TAG, "Enable BLE...");
+  }else{
+    ESP_LOGD(TAG, "Disable BLE...");
   }
 
   this -> send_command_(CMD_BLE_CONF, cmd_value, 2);

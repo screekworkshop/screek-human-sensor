@@ -6,9 +6,11 @@ from esphome.const import (
     DEVICE_CLASS_ENERGY,
     UNIT_CENTIMETER,
     UNIT_PERCENT,
-    DEVICE_CLASS_ILLUMINANCE,
+    STATE_CLASS_NONE, 
+    ICON_BRIGHTNESS_5,
     UNIT_EMPTY,
     UNIT_LUX,
+
 )
 from . import CONF_LD2410_ID, LD2410Component
 
@@ -37,8 +39,11 @@ CONFIG_SCHEMA = {
     cv.Optional(CONF_DETECTION_DISTANCE): sensor.sensor_schema(
         device_class=DEVICE_CLASS_DISTANCE, unit_of_measurement=UNIT_CENTIMETER
     ),
+
     cv.Optional(CONF_LIGHT): sensor.sensor_schema(
-        device_class=DEVICE_CLASS_ILLUMINANCE, unit_of_measurement=UNIT_PERCENT
+        device_class=STATE_CLASS_NONE, 
+        icon=ICON_BRIGHTNESS_5,
+        unit_of_measurement=UNIT_PERCENT
     ),
 }
 
@@ -59,6 +64,7 @@ async def to_code(config):
     if CONF_DETECTION_DISTANCE in config:
         sens = await sensor.new_sensor(config[CONF_DETECTION_DISTANCE])
         cg.add(ld2410_component.set_detection_distance_sensor(sens))
+
     if CONF_LIGHT in config:
         sens = await sensor.new_sensor(config[CONF_LIGHT])
         cg.add(ld2410_component.set_light_sensor(sens))
