@@ -5,6 +5,8 @@ esphome:
   name_add_mac_suffix: True
   platformio_options:
     board_build.flash_mode: dio
+    board_build.extra_flags:
+      - "-DARDUINO_USB_CDC_ON_BOOT=0" 
   project: 
     name: Screek.Human_Presence_Sensor
     version: 1U
@@ -22,7 +24,7 @@ esp32:
 improv_serial:
   
 logger:
-  hardware_uart: uart0
+  # hardware_uart: uart0
 
 api:
 
