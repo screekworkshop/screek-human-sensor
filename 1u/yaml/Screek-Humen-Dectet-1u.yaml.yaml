@@ -27,7 +27,7 @@ external_components:
   # - source: github://screek-workshop/custom_components_support_for_screek_1u
   - source:
       type: git
-      url: https://github.com/screek-workshop/custom_components_support_for_screek_1u
+      url: https://github.com/screekworkshop/custom_components_support_for_screek_1u
       ref: master
     # components: [ ld2410, uart ]
 
