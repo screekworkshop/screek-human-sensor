@@ -1,45 +1,67 @@
 esphome:
-  name: screek-humen-dectet-1u
-  comment: Screek Human Presence Sensor 24GHz PS-HPS 1U
+  name: screek-humen-sensor-1u
+  comment: Screek Human Presence Sensor 1U
   friendly_name: Screek Human Presence Sensor 1U
   name_add_mac_suffix: True
   platformio_options:
     board_build.flash_mode: dio
-  min_version: 2023.3.2
+    board_build.f_cpu: 80000000L
+  on_boot:
+    priority: 900
+    then:
+       lambda: |-
+        // id(wake_up_reason) = esp_sleep_get_wakeup_cause();
+        id(cpu_speed) = ESP.getCpuFreqMHz() ;
   project: 
     name: Screek.Human_Presence_Sensor
     version: 1U
+  min_version: 2023.6.1
+
+globals:
+   - id: cpu_speed
+     type: int
+     restore_value: no
+     initial_value: '0'
 
 external_components:
-  - source: screek-mod-components
-    components: [ ld2410, uart ]
-  
+  # - source: github://screek-workshop/custom_components_support_for_screek_1u
+  - source:
+      type: git
+      url: https://github.com/screek-workshop/custom_components_support_for_screek_1u
+      ref: master
+    # components: [ ld2410, uart ]
+
 esp32:
   board: lolin_s2_mini
   framework:
     type: arduino
-    version: 2.0.7
-    platform_version: 6.0.1
+    version: 2.0.9
+    platform_version: 6.3.2
 
 improv_serial:
-  
+
 logger:
   hardware_uart: uart0
 
 api:
-
+  # encryption:
+    # key: "YOUR-API-PASSWORD"
 
 ota:
-  password: "YOUR_OTA_PASSWORD"
+  # This won't work for the original firmware(we use diffrent ota password),
+  # so if you want to turn it into your own OTA, 
+  # make sure to completely flash your custom yaml in the firmware once.
+  # after that, you may always ota with your own password.
+  password: "all-things-in-their-being-are-good-for-something" # words by Socrates
 
 wifi:
-  # ssid: !secret wifi_ssid
-  # password: !secret wifi_password
-  # fast_connect: True
-
-  power_save_mode: NONE
+  # power_save_mode: NONE
+  output_power: 15dB
+  power_save_mode: LIGHT
+  reboot_timeout: 10min
   ap:
     ssid: "SCREEK HUMAN-SENSOR"
+    # password: "YOUR-AP-PASSWORD"
 
 captive_portal:
 
@@ -60,22 +82,41 @@ binary_sensor:
 
 sensor:
   - platform: template
+    name: "ESP Cpu Speed"
+    accuracy_decimals: 0
+    unit_of_measurement: Mhz
+    lambda: |-
+      return (id(cpu_speed));
+    entity_category: "diagnostic"
+
+  # - platform: internal_temperature
+  #   id: sys_esp_temperature
+  #   name: ESP Temperature
+  #   unit_of_measurement: °C
+  #   device_class: TEMPERATURE
+  #   update_interval: 1s
+  #   entity_category: "diagnostic"
+
+  - platform: template
     id: sys_esp_temperature
     name: ESP Temperature
     lambda: return temperatureRead();
     unit_of_measurement: °C
     device_class: TEMPERATURE
-    update_interval: 30s
+    update_interval: 5s
     entity_category: "diagnostic"
+
   - platform: uptime
     name: Uptime
     id: sys_uptime
     update_interval: 10s
+
   - platform: wifi_signal 
     name: RSSI
     id: wifi_signal_db
-    update_interval: 1s
+    update_interval: 5s
     entity_category: "diagnostic"
+
   - platform: template
     id: esp_memory
     icon: mdi:memory
@@ -84,6 +125,7 @@ sensor:
     unit_of_measurement: 'kB'
     state_class: measurement
     entity_category: "diagnostic"
+
   - platform: ld2410
     moving_distance:
       name : Moving Distance
@@ -109,12 +151,10 @@ light:
 
 time:
   - platform: sntp
-    id: time_now
-    servers: 
-      - ntp.aliyun.com      
+    id: time_sntp
 
 uart:
-  id: uart1
+  id: uart_ld2410
   tx_pin: GPIO18
   rx_pin: GPIO33
   baud_rate: 256000
@@ -124,22 +164,46 @@ uart:
 ld2410:
   timeout: 150s
   id: ld2410_radar
+  # max_move_distance : 6m
+  # max_still_distance: 0.75m
+  # g0_move_threshold: 10
+  # g0_still_threshold: 20
+  # g1_move_threshold: 10
+  # g1_still_threshold: 20
+  # g2_move_threshold: 20
+  # g2_still_threshold: 21
+  # g3_move_threshold: 30
+  # g3_still_threshold: 31
+  # g4_move_threshold: 40
+  # g4_still_threshold: 41
+  # g5_move_threshold: 50
+  # g5_still_threshold: 51
+  # g6_move_threshold: 60
+  # g6_still_threshold: 61
+  # g7_move_threshold: 70
+  # g7_still_threshold: 71
+  # g8_move_threshold: 80
+  # g8_still_threshold: 81
 
 button:
   - platform: template
     name: "Enable LD2410 BLE"
+    # disabled_by_default: True
     entity_category: "config"
     icon: mdi:bluetooth
     on_press:
       lambda: |-
         id(ld2410_radar) -> ble_control(true);
+
   - platform: template
     name: "Disable LD2410 BLE"
+    # disabled_by_default: True
     entity_category: "config"
     icon: mdi:bluetooth-off
     on_press:
       lambda: |-
         id(ld2410_radar) -> ble_control(false);
+
   - platform: template
     name: "LD2410 Reboot"
     icon: mdi:radar
@@ -149,9 +213,11 @@ button:
         // auto* radar = LD2410Component::get(ld2410); 
         // radar -> roboot();
         id(ld2410_radar) -> reboot();
+
   - platform: restart
     icon: mdi:power-cycle
     name: "ESP Reboot"
+
   - platform: factory_reset
     disabled_by_default: True
     name: Factory Reset
