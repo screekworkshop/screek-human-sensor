@@ -1,4 +1,4 @@
-# screek-human-sensor
+# SCREEK Human Presence Sensor DIY Support
 
 This is the source code for the DIY sensors we make, you are free to modify them and use them, and feel free to provide suggestions to us.  
 
