@@ -59,9 +59,9 @@ ota:
 
 # By automatically importing to the console, 
 # subsequent adjustments can be easily made without having to manually fix a specific name.
-dashboard_import:
-  package_import_url: github://screekworkshop/screek-human-sensor/1u/yaml/Screek-Humen-Dectet-1u.yaml@2023.06
-  import_full_config: True
+# dashboard_import:
+#  package_import_url: github://screekworkshop/screek-human-sensor/1u/yaml/Screek-Humen-Dectet-1u.yaml@2023.06
+#  import_full_config: True
 
 wifi:
   # power_save_mode: NONE
