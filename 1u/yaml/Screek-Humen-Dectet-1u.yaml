@@ -1,5 +1,5 @@
 # This is a custom firmware for Human Presence Sensor 1U
-# https://screek.tech
+# https://screek.io/1u
 
 esphome:
   name: screek-humen-sensor-1u
@@ -13,7 +13,6 @@ esphome:
     priority: 900
     then:
        lambda: |-
-        // id(wake_up_reason) = esp_sleep_get_wakeup_cause();
         id(cpu_speed) = ESP.getCpuFreqMHz() ;
   project: 
     name: Screek.Human_Presence_Sensor
@@ -56,12 +55,13 @@ ota:
   # make sure to completely flash your custom yaml in the firmware once.
   # after that, you may always ota with your own password.
   password: "all-things-in-their-being-are-good-for-something" # words by Socrates
+  safe_mode: False
 
 # By automatically importing to the console, 
 # subsequent adjustments can be easily made without having to manually fix a specific name.
 # dashboard_import:
 #  package_import_url: github://screekworkshop/screek-human-sensor/1u/yaml/Screek-Humen-Dectet-1u.yaml@2023.06
-#  import_full_config: True
+#  import_full_config: False
 
 wifi:
   # power_save_mode: NONE
@@ -112,18 +112,18 @@ sensor:
     lambda: return temperatureRead();
     unit_of_measurement: °C
     device_class: TEMPERATURE
-    update_interval: 30s
+    update_interval: 5s
     entity_category: "diagnostic"
 
   - platform: uptime
     name: Uptime
     id: sys_uptime
-    update_interval: 60s
+    update_interval: 10s
 
   - platform: wifi_signal 
     name: RSSI
     id: wifi_signal_db
-    update_interval: 60s
+    update_interval: 5s
     entity_category: "diagnostic"
 
   - platform: template
@@ -134,7 +134,7 @@ sensor:
     unit_of_measurement: 'kB'
     state_class: measurement
     entity_category: "diagnostic"
-    update_interval: 60s
+
   - platform: ld2410
     moving_distance:
       name : Moving Distance
@@ -173,6 +173,26 @@ uart:
 ld2410:
   timeout: 150s
   id: ld2410_radar
+  # max_move_distance : 6m
+  # max_still_distance: 0.75m
+  # g0_move_threshold: 10
+  # g0_still_threshold: 20
+  # g1_move_threshold: 10
+  # g1_still_threshold: 20
+  # g2_move_threshold: 20
+  # g2_still_threshold: 21
+  # g3_move_threshold: 30
+  # g3_still_threshold: 31
+  # g4_move_threshold: 40
+  # g4_still_threshold: 41
+  # g5_move_threshold: 50
+  # g5_still_threshold: 51
+  # g6_move_threshold: 60
+  # g6_still_threshold: 61
+  # g7_move_threshold: 70
+  # g7_still_threshold: 71
+  # g8_move_threshold: 80
+  # g8_still_threshold: 81
 
 button:
   - platform: template
