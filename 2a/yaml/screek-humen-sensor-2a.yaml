@@ -329,7 +329,7 @@ uart:
           }else{
             p3_speed = 0 - p3_speed;
           }
-          int16_t p3_distance_resolution = (uint16_t((bytes[19] << 8) | bytes[18] )); 
+          int16_t p3_distance_resolution = (uint16_t((bytes[27] << 8) | bytes[26] ));
 
           id(target1_x).publish_state(p1_x);
           id(target1_y).publish_state(p1_y);
