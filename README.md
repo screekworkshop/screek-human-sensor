@@ -4,19 +4,16 @@ This is the source code for the DIY sensors we make, you are free to modify them
 
 Consider the current privacy so extravagant, and the severe dependence on cloud services. Open source can bring better privacy, and more personalized customization.  
 
-If you would like to purchase one of our DIY products, or take a look at our documentation, feel free to visit  
+If you would like to purchase one of our DIY products, or take a look at our documentation, feel free to visit   
 https://www.screek.io/  
 
 Our eBay Store:  
 https://www.ebay.com/str/screekworkshop  
 
-And Here is A FB Group:
+And Here is A FB Group:  
 https://www.facebook.com/groups/screekworkshop
 
-And Reddit:
+And Reddit:   
 https://www.reddit.com/r/screekworkshop/  
 
-Happy DIYing!  
-
-If you want to sponsor us, we got a link to:   
-https://www.buymeacoffee.com/screekworkshop
+Happy DIYing!
