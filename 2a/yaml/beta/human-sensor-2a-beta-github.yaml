@@ -383,16 +383,6 @@ binary_sensor:
     id: zone_ex1_target_exsits
     icon: mdi:account-multiple-remove
     device_class: occupancy
-  # - platform: gpio
-  #   pin: 9
-  #   name: "Boot Btn"
-    # device_class: plug
-    # on_press:  
-    #   then:
-    #     - uart.write:
-    #         id: uart_bus
-    #         data: 'date'
-    #     - logger.log: "按下Boot"
 
 i2c:
   sda: GPIO7
@@ -415,16 +405,13 @@ sensor:
     id: sys_esp_temperature
     name: ESP Temperature
     lambda: return temperatureRead();
-    # 这里不要引号也可以的，没事。(23年1月10日_15时44分_)
     unit_of_measurement: °C
     device_class: TEMPERATURE
     update_interval: 45s
     entity_category: "diagnostic"
   - platform: uptime
-    # 显示名称
     name: ESP Uptime
     id: sys_uptime
-    # 更新间隔日期(23年2月26日_17时46分_)
     update_interval: 60s
   - platform: wifi_signal 
     name: RSSI
@@ -440,59 +427,25 @@ sensor:
     state_class: measurement
     entity_category: "diagnostic"
     update_interval: 60s
-  # - platform: template
-  #   name: "Illuminance"
-  #   id: illuminance
-  #   device_class: illuminance
-  #   accuracy_decimals: 1
-  #   state_class: measurement
   - platform: bh1750
     name: "Illuminance"
     accuracy_decimals: 1
     id: bh1750_light
-    # internal: True
     update_interval: 1s
-    # 这个方法不再使用，因为过滤器好用啊！(23年7月30日_11时18分_)
-    # on_value: 
-    #   then:
-    #     lambda: |-
-    #       float curr_value = id(bh1750_light).state;
-    #       float last_light = std::isnan(id(illuminance).state) ? 0 : id(illuminance).state;
-    #       float diff_light = abs(last_light - curr_value);
-    #       // ESP_LOGD("custom", "diff light: %f", diff_light);
-    #       if (abs(last_light - curr_value) > 0.5){
-    #         // ESP_LOGD("custom", "update light");
-    #         id(illuminance).publish_state(curr_value);
-    #       }
-    #       return;
-
-    # filters:
-    #   - throttle: 1s
-    #   - delta: 1.0
-    #   # 加入心率1分钟总是上传一次数据，CSZ的没有光线的情况可能有助于改善？(23年8月3日_22时07分_)
-    #   # - heartbeat: 5min
-
-    # 第三版，增加开关(23年8月18日_10时29分_)
     filters:
-      # - throttle: 1s
       - lambda: !lambda |-
-          // 重复值没必要推送。(23年8月18日_11时48分_)
           if (id(last_illuminance) == x){
             return {};
           }
           if (id(bh1750_fast_update).state){
-            // ESP_LOGD("custom", "Fast Update BH1850");
             return x;
           }
           if (abs(id(last_illuminance) - x) > 1){
-              // 更新上次的值，一次性推送。(23年8月18日_10时33分_)
               id(last_illuminance) = x;
               return x;
           }
           return {};
 
-  #-------------------------------------#
-  # 高级雷达数据
   - platform: template
     name: "All Target Counts"
     id: all_target_count
@@ -678,12 +631,7 @@ uart:
     dummy_receiver: True
     after:
      delimiter: [0X55, 0XCC]
-    #  timeout: 20ms
-     # delimiter: ""
-    #  delimiter: [0xF8,0xF7,0xF6,0xF5]
     sequence:
-      # - lambda: UARTDebug::log_hex(direction, bytes, ' ');
-      # 计算第一个坐标，目标1的x坐标
       - lambda: |-
           if ((millis() - id(last_update_ld2450)) <= 500) { 
             return;
@@ -712,9 +660,8 @@ uart:
           }
           int16_t p1_distance_resolution = (uint16_t((bytes[11] << 8) | bytes[10] )); 
 
-          // p2信息
           int16_t p2_x = (uint16_t((bytes[13] << 8) | bytes[12] ));
-          if ((bytes[13] & 0x80) >> 7){ // 最高位是1
+          if ((bytes[13] & 0x80) >> 7){
             p2_x -=  pow(2, 15); 
           }else{
             p2_x = 0 - p2_x;
