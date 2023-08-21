@@ -61,10 +61,7 @@ text_sensor:
       entity_category: "diagnostic"
       disabled_by_default: True
 
-# Enable Home Assistant API
 api:
-  # encryption:
-    # key: "b1b1F1ArnSZmIvk7WLL9oG19gjPTCmBP1irQlSlSDGY="
 
 ota:
   password: "all-things-in-their-being-are-good-for-something" # words by Socrates
