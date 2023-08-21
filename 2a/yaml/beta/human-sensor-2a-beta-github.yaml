@@ -30,7 +30,11 @@ preferences:
     flash_write_interval: 5s
 
 external_components:
-  - source: screek-components
+  - source:
+      type: git
+      url: https://github.com/screekworkshop/custom_components_support_for_screek_2a
+      ref: main
+    components: [esp32, uart]
   
 esp32:
   board: lolin_c3_mini
