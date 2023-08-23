@@ -1,5 +1,5 @@
 # This is a custom firmware for Human Presence Sensor 2A
-# https://screek.io/2a
+# https://docs.screek.io/2a
 # Current version synchronized with public version: V230818_2_beta
 
 esphome:
@@ -59,7 +59,7 @@ globals:
   - id: last_illuminance
     type: float
     restore_value: no
-    initial_value: "0"
+    initial_value: "-1"
 
 improv_serial:
   
