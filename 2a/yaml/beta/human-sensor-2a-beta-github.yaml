@@ -709,9 +709,9 @@ uart:
           
           int16_t p3_distance_resolution = (uint16_t((bytes[27] << 8) | bytes[26] )); 
 
-          bool p1_vaild = (p1_x > 0 || p1_y > 0);
-          bool p2_vaild = (p2_x > 0 || p2_y > 0);
-          bool p3_vaild = (p3_x > 0 || p3_y > 0);
+          bool p1_vaild = (p1_x != 0 || p1_y > 0);
+          bool p2_vaild = (p2_x != 0 || p2_y > 0);
+          bool p3_vaild = (p3_x != 0 || p3_y > 0);
 
           int16_t target_count_in_zone_ex1 = 0;
 
