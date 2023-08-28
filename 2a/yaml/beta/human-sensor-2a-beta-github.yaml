@@ -442,6 +442,7 @@ sensor:
             return {};
           }
           if (id(bh1750_fast_update).state){
+            id(last_illuminance) = x;
             return x;
           }
           if (abs(id(last_illuminance) - x) > 1){
