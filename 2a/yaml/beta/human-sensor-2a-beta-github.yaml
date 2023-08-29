@@ -140,8 +140,8 @@ number:
   - platform: template
     name: Zone1 X-Begin
     id: zone1_x_begin
-    min_value: -3000
-    max_value: 3000
+    min_value: -4000
+    max_value: 4000
     mode: box
     device_class: distance
     entity_category: config
@@ -155,8 +155,8 @@ number:
     name: Zone1 X-End
     id: zone1_x_end
     mode: box
-    min_value: -3000
-    max_value: 3000
+    min_value: -4000
+    max_value: 4000
     device_class: distance
     unit_of_measurement: mm
     entity_category: config
@@ -196,8 +196,8 @@ number:
   - platform: template
     name: Zone2 X-Begin
     id: zone2_x_begin
-    min_value: -3000
-    max_value: 3000
+    min_value: -4000
+    max_value: 4000
     mode: box
     device_class: distance
     entity_category: config
@@ -211,8 +211,8 @@ number:
     name: Zone2 X-End
     id: zone2_x_end
     mode: box
-    min_value: -3000
-    max_value: 3000
+    min_value: -4000
+    max_value: 4000
     device_class: distance
     unit_of_measurement: mm
     entity_category: config
@@ -252,8 +252,8 @@ number:
   - platform: template
     name: Zone3 X-Begin
     id: zone3_x_begin
-    min_value: -3000
-    max_value: 3000
+    min_value: -4000
+    max_value: 4000
     mode: box
     device_class: distance
     entity_category: config
@@ -267,8 +267,8 @@ number:
     name: Zone3 X-End
     id: zone3_x_end
     mode: box
-    min_value: -3000
-    max_value: 3000
+    min_value: -4000
+    max_value: 4000
     device_class: distance
     unit_of_measurement: mm
     entity_category: config
@@ -308,8 +308,8 @@ number:
   - platform: template
     name: Zout1 X-Begin
     id: zone_ex1_x_begin
-    min_value: -3000
-    max_value: 3000
+    min_value: -4000
+    max_value: 4000
     mode: box
     device_class: distance
     entity_category: config
@@ -323,8 +323,8 @@ number:
     name: Zout1 X-End
     id: zone_ex1_x_end
     mode: box
-    min_value: -3000
-    max_value: 3000
+    min_value: -4000
+    max_value: 4000
     device_class: distance
     unit_of_measurement: mm
     entity_category: config
