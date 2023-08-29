@@ -18,7 +18,7 @@ esphome:
       then:
         lambda: |-
           id(cpu_speed) = ESP.getCpuFreqMHz();
-    - priority: 2000
+    - priority: -200
       then:
         lambda: |-
           id(zone1_target_exsits).publish_state(false);
