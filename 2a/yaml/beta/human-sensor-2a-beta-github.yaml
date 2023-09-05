@@ -88,7 +88,6 @@ web_server:
 
 
 text_sensor:
-# 公共代码部分(23年9月2日_11时53分_)
   - platform: debug
     reset_reason:
       name: "ESP Reset Reason"
@@ -139,6 +138,20 @@ text_sensor:
     update_interval: 1000s
 
 number:
+  - platform: template
+    name: "Any Presence Timeout"
+    id: any_presence_timeout
+    min_value: 0
+    max_value: 600
+    mode: box
+    device_class: duration
+    entity_category: config
+    unit_of_measurement: s
+    icon: mdi:timer-off
+    step: 1
+    optimistic: True
+    initial_value: 0
+    restore_value: True
   - platform: template
     name: "Zone1 Timeout"
     id: zone1_x_timeout
@@ -469,6 +482,9 @@ binary_sensor:
     name: "Any Presence"
     id: any_target_exsits
     device_class: occupancy
+    filters:
+      - delayed_off: !lambda |-
+          return id(any_presence_timeout).state * 1000.0;
   - platform: template
     name: "Zone1 Presence"
     id: zone1_target_exsits
