@@ -2,7 +2,7 @@
 # https://screek.io/2a
 
 esphome:
-  name: screek-humen-sensor-2a
+  name: screek-human-sensor-2a
   comment: Screek Human Sensor 2A
   friendly_name: Human Sensor 2A
   name_add_mac_suffix: True
