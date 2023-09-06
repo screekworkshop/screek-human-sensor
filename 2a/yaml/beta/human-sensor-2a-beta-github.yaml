@@ -1098,42 +1098,31 @@ uart:
             id(target3_resolution).publish_state(p3_distance_resolution);
           }
 
-          // public target info
+          // publish target info
           
           if (id(all_target_count).state != all_target_counts){
             id(all_target_count).publish_state(all_target_counts);
-          }
-          if (id(any_target_exsits).state != has_target_in_zone_all){
             id(any_target_exsits).publish_state(has_target_in_zone_all);
           }
 
           if (id(zone1_target_count).state != target_count_in_zone1){
             id(zone1_target_count).publish_state(target_count_in_zone1);
-          }
-          if (id(zone1_target_exsits).state != has_target_in_zone1){
             id(zone1_target_exsits).publish_state(has_target_in_zone1);
           }
 
           if (id(zone2_target_count).state != target_count_in_zone2){
             id(zone2_target_count).publish_state(target_count_in_zone2);
-          }
-          if (id(zone2_target_exsits).state != has_target_in_zone2 ){
             id(zone2_target_exsits).publish_state(has_target_in_zone2);
           }
 
           if (id(zone3_target_count).state != target_count_in_zone3){
             id(zone3_target_count).publish_state(target_count_in_zone3);
-          }
-          if (id(zone3_target_exsits).state != has_target_in_zone3){
             id(zone3_target_exsits).publish_state(has_target_in_zone3);
           }
           
           // zout
           if (id(zone_ex1_target_count).state != target_count_in_zone_ex1){
             id(zone_ex1_target_count).publish_state(target_count_in_zone_ex1);
-          }
-
-          if (id(zone_ex1_target_exsits).state != has_target_in_zone_ex1){
             id(zone_ex1_target_exsits).publish_state(has_target_in_zone_ex1);
           }
 
