@@ -136,6 +136,15 @@ text_sensor:
     lambda: |-
       return {"Zone Exclusion 1" };
     update_interval: 1000s
+  - platform: template
+    name: "Any-Presence Info"
+    id: tips_any_presence_conf
+    icon: mdi:information-outline
+    entity_category: config
+    lambda: |-
+      return {"Any Presence Config" };
+    update_interval: 1000s
+
 
 number:
   - platform: template
@@ -484,6 +493,9 @@ binary_sensor:
     device_class: occupancy
     filters:
       - delayed_off: !lambda |-
+          if (!id(init_zone_publish)) {
+            return 0;
+          };
           return id(any_presence_timeout).state * 1000.0;
   - platform: template
     name: "Zone1 Presence"
@@ -491,6 +503,9 @@ binary_sensor:
     device_class: occupancy
     filters:
       - delayed_off: !lambda |-
+          if (!id(init_zone_publish)) {
+            return 0;
+          }
           return id(zone1_x_timeout).state * 1000.0;
   - platform: template
     name: "Zone2 Presence"
@@ -498,6 +513,9 @@ binary_sensor:
     device_class: occupancy
     filters:
       - delayed_off: !lambda |-
+          if (!id(init_zone_publish)) {
+            return 0;
+          }
           return id(zone2_x_timeout).state * 1000.0;
   - platform: template
     name: "Zone3 Presence"
@@ -505,6 +523,9 @@ binary_sensor:
     device_class: occupancy
     filters:
       - delayed_off: !lambda |-
+          if (!id(init_zone_publish)) {
+            return 0;
+          }
           return id(zone3_x_timeout).state * 1000.0;
   - platform: template
     name: "Zout1 Presence"
@@ -790,7 +811,7 @@ light:
   - platform: binary
     name: "Red Info Light"
     output: board_info_ed
-    entity_category: "config"
+    entity_category: diagnostic
     restore_mode: ALWAYS_OFF
 
 time:
@@ -808,6 +829,7 @@ switch:
     name: Factory Reset
     disabled_by_default: True
     icon: mdi:heart-broken
+    entity_category: diagnostic
   - platform: template
     name: Zout1 Enable
     id: zone_ex1_enable
@@ -1103,26 +1125,37 @@ uart:
           if (id(all_target_count).state != all_target_counts){
             id(all_target_count).publish_state(all_target_counts);
             id(any_target_exsits).publish_state(has_target_in_zone_all);
+          }else if (id(any_target_exsits).state != has_target_in_zone_all){
+            id(any_target_exsits).publish_state(has_target_in_zone_all);
           }
 
           if (id(zone1_target_count).state != target_count_in_zone1){
             id(zone1_target_count).publish_state(target_count_in_zone1);
+            id(zone1_target_exsits).publish_state(has_target_in_zone1);
+          }else if (id(zone1_target_exsits).state != has_target_in_zone1){
             id(zone1_target_exsits).publish_state(has_target_in_zone1);
           }
 
           if (id(zone2_target_count).state != target_count_in_zone2){
             id(zone2_target_count).publish_state(target_count_in_zone2);
             id(zone2_target_exsits).publish_state(has_target_in_zone2);
+          }else if (id(zone2_target_exsits).state != has_target_in_zone2){
+            id(zone2_target_exsits).publish_state(has_target_in_zone2);
           }
 
           if (id(zone3_target_count).state != target_count_in_zone3){
             id(zone3_target_count).publish_state(target_count_in_zone3);
+            id(zone3_target_exsits).publish_state(has_target_in_zone3);
+          }else if (id(zone3_target_exsits).state != has_target_in_zone3){
             id(zone3_target_exsits).publish_state(has_target_in_zone3);
           }
           
           // zout
           if (id(zone_ex1_target_count).state != target_count_in_zone_ex1){
             id(zone_ex1_target_count).publish_state(target_count_in_zone_ex1);
+          }
+
+          if (id(zone_ex1_target_exsits).state != has_target_in_zone_ex1){
             id(zone_ex1_target_exsits).publish_state(has_target_in_zone_ex1);
           }
 
