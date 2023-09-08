@@ -144,7 +144,30 @@ text_sensor:
     lambda: |-
       return {"Any Presence Config" };
     update_interval: 1000s
-
+  - platform: template
+    name: "Target1 Direction"
+    id: target1_direction
+    icon: mdi:directions
+  - platform: template
+    name: "Target2 Direction"
+    id: target2_direction
+    icon: mdi:directions
+  - platform: template
+    name: "Target3 Direction"
+    id: target3_direction
+    icon: mdi:directions
+  - platform: template
+    name: "Target1 Position"
+    id: target1_position
+    icon: mdi:directions
+  - platform: template
+    name: "Target2 Position"
+    id: target2_position
+    icon: mdi:directions
+  - platform: template
+    name: "Target3 Position"
+    id: target3_position
+    icon: mdi:directions
 
 number:
   - platform: template
@@ -493,7 +516,7 @@ binary_sensor:
     device_class: occupancy
     filters:
       - delayed_off: !lambda |-
-          if (!id(init_zone_publish)) {
+          if (!id(init_zone_publish) || !id(zone_fn_enable).state) {
             return 0;
           };
           return id(any_presence_timeout).state * 1000.0;
@@ -503,7 +526,7 @@ binary_sensor:
     device_class: occupancy
     filters:
       - delayed_off: !lambda |-
-          if (!id(init_zone_publish)) {
+          if (!id(init_zone_publish) || !id(zone_fn_enable).state) {
             return 0;
           }
           return id(zone1_x_timeout).state * 1000.0;
@@ -513,7 +536,7 @@ binary_sensor:
     device_class: occupancy
     filters:
       - delayed_off: !lambda |-
-          if (!id(init_zone_publish)) {
+          if (!id(init_zone_publish) || !id(zone_fn_enable).state) {
             return 0;
           }
           return id(zone2_x_timeout).state * 1000.0;
@@ -523,7 +546,7 @@ binary_sensor:
     device_class: occupancy
     filters:
       - delayed_off: !lambda |-
-          if (!id(init_zone_publish)) {
+          if (!id(init_zone_publish) || !id(zone_fn_enable).state) {
             return 0;
           }
           return id(zone3_x_timeout).state * 1000.0;
@@ -718,6 +741,7 @@ sensor:
     accuracy_decimals: 0
     unit_of_measurement: 'mm'
     state_class: measurement
+    icon: mdi:focus-field-horizontal
     device_class: distance
   - platform: template
     name: "Target1 Y"
@@ -726,6 +750,7 @@ sensor:
     unit_of_measurement: 'mm'
     state_class: measurement
     device_class: distance
+    icon: mdi:focus-field-vertical
   - platform: template
     name: "Target1 Speed"
     id: target1_speed
@@ -749,6 +774,7 @@ sensor:
     unit_of_measurement: 'mm'
     state_class: measurement
     device_class: distance
+    icon: mdi:focus-field-horizontal
   - platform: template
     name: "Target2 Y"
     id: target2_y
@@ -756,6 +782,7 @@ sensor:
     unit_of_measurement: 'mm'
     state_class: measurement
     device_class: distance
+    icon: mdi:focus-field-vertical
   - platform: template
     name: "Target2 Speed"
     id: target2_speed
@@ -779,6 +806,7 @@ sensor:
     unit_of_measurement: 'mm'
     state_class: measurement
     device_class: distance
+    icon: mdi:focus-field-horizontal
   - platform: template
     name: "Target3 Y"
     id: target3_y
@@ -786,6 +814,7 @@ sensor:
     unit_of_measurement: 'mm'
     state_class: measurement
     device_class: distance
+    icon: mdi:focus-field-vertical
   - platform: template
     name: "Target3 Speed"
     id: target3_speed
@@ -800,7 +829,24 @@ sensor:
     unit_of_measurement: 'mm'
     state_class: measurement
     device_class: distance
-
+  - platform: template
+    name: "Target1 Angle"
+    id: target1_angle
+    unit_of_measurement: 'º'
+    accuracy_decimals: 1
+    icon: mdi:angle-acute
+  - platform: template
+    name: "Target2 Angle"
+    id: target2_angle
+    accuracy_decimals: 1
+    unit_of_measurement: 'º'
+    icon: mdi:angle-acute
+  - platform: template
+    name: "Target3 Angle"
+    id: target3_angle
+    accuracy_decimals: 1
+    unit_of_measurement: 'º'
+    icon: mdi:angle-acute
 
 light:
   - platform: status_led
@@ -823,7 +869,6 @@ output:
     id: board_info_ed
     pin: GPIO12
 
-
 switch:
   - platform: factory_reset
     name: Factory Reset
@@ -837,6 +882,13 @@ switch:
     icon: mdi:account-cancel
     entity_category: config
     restore_mode: RESTORE_DEFAULT_OFF
+  - platform: template
+    name: Zone Enable
+    id: zone_fn_enable
+    optimistic: True
+    icon: mdi:target-variant
+    entity_category: config
+    restore_mode: RESTORE_DEFAULT_ON
   - platform: template
     name: Illuminance Fast-Update
     id: bh1750_fast_update
@@ -1002,83 +1054,189 @@ uart:
 
           bool has_target_in_zone_all = (all_target_counts > 0);
 
-          // zone 1 check
-
           int16_t target_count_in_zone1 = 0;
-          int16_t zone1_x_min = id(zone1_x_begin).state;
-          int16_t zone1_x_max = id(zone1_x_end).state;
-          int16_t zone1_y_min = id(zone1_y_begin).state;
-          int16_t zone1_y_max = id(zone1_y_end).state;
-
-          if (p1_vaild && !p1_zone_ex_enter){
-            if (p1_x >= zone1_x_min && p1_x <= zone1_x_max && p1_y >= zone1_y_min && p1_y <= zone1_y_max){
-                target_count_in_zone1 ++;
-            }
-          }
-          if (p2_vaild && !p2_zone_ex_enter){
-            if (p2_x >= zone1_x_min && p2_x <= zone1_x_max && p2_y >= zone1_y_min && p2_y <= zone1_y_max){
-                target_count_in_zone1 ++;
-            }
-          }
-          if (p3_vaild && !p3_zone_ex_enter){
-            if (p3_x >= zone1_x_min && p3_x <= zone1_x_max && p3_y >= zone1_y_min && p3_y <= zone1_y_max){
-                target_count_in_zone1 ++;
-            }
-          }
-          bool has_target_in_zone1 = (target_count_in_zone1 > 0);
-
-          // zone 2 check
+          bool has_target_in_zone1 = false;
 
           int16_t target_count_in_zone2 = 0;
-          int16_t zone2_x_min = id(zone2_x_begin).state;
-          int16_t zone2_x_max = id(zone2_x_end).state;
-          int16_t zone2_y_min = id(zone2_y_begin).state;
-          int16_t zone2_y_max = id(zone2_y_end).state;
-
-          if (p1_vaild && !p1_zone_ex_enter){
-            if (p1_x >= zone2_x_min && p1_x <= zone2_x_max && p1_y >= zone2_y_min && p1_y <= zone2_y_max){
-                target_count_in_zone2 ++;
-            }
-          }
-          if (p2_vaild && !p2_zone_ex_enter){
-            if (p2_x >= zone2_x_min && p2_x <= zone2_x_max && p2_y >= zone2_y_min && p2_y <= zone2_y_max){
-                target_count_in_zone2 ++;
-            }
-          }
-          if (p3_vaild && !p3_zone_ex_enter){
-            if (p3_x >= zone2_x_min && p3_x <= zone2_x_max && p3_y >= zone2_y_min && p3_y <= zone2_y_max){
-                target_count_in_zone2 ++;
-            }
-          }
-
-          bool has_target_in_zone2 = (target_count_in_zone2 > 0);
-
-          // zone 3 check
+          bool has_target_in_zone2 = false;
 
           int16_t target_count_in_zone3 = 0;
-          int16_t zone3_x_min = id(zone3_x_begin).state;
-          int16_t zone3_x_max = id(zone3_x_end).state;
-          int16_t zone3_y_min = id(zone3_y_begin).state;
-          int16_t zone3_y_max = id(zone3_y_end).state;
+          bool has_target_in_zone3 = false;
 
-          if (p1_vaild && !p1_zone_ex_enter){
-            if (p1_x >= zone3_x_min && p1_x <= zone3_x_max && p1_y >= zone3_y_min && p1_y <= zone3_y_max){
-                target_count_in_zone3 ++;
+          if (id(zone_fn_enable).state){
+
+            // zone 1 check
+
+            int16_t zone1_x_min = id(zone1_x_begin).state;
+            int16_t zone1_x_max = id(zone1_x_end).state;
+            int16_t zone1_y_min = id(zone1_y_begin).state;
+            int16_t zone1_y_max = id(zone1_y_end).state;
+
+            if (p1_vaild && !p1_zone_ex_enter){
+              if (p1_x >= zone1_x_min && p1_x <= zone1_x_max && p1_y >= zone1_y_min && p1_y <= zone1_y_max){
+                  target_count_in_zone1 ++;
+              }
             }
-          }
-          if (p2_vaild && !p2_zone_ex_enter){
-            if (p2_x >= zone3_x_min && p2_x <= zone3_x_max && p2_y >= zone3_y_min && p2_y <= zone3_y_max){
-                target_count_in_zone3 ++;
+            if (p2_vaild && !p2_zone_ex_enter){
+              if (p2_x >= zone1_x_min && p2_x <= zone1_x_max && p2_y >= zone1_y_min && p2_y <= zone1_y_max){
+                  target_count_in_zone1 ++;
+              }
             }
-          }
-          if (p3_vaild && !p3_zone_ex_enter){
-            if (p3_x >= zone3_x_min && p3_x <= zone3_x_max && p3_y >= zone3_y_min && p3_y <= zone3_y_max){
-                target_count_in_zone3 ++;
+            if (p3_vaild && !p3_zone_ex_enter){
+              if (p3_x >= zone1_x_min && p3_x <= zone1_x_max && p3_y >= zone1_y_min && p3_y <= zone1_y_max){
+                  target_count_in_zone1 ++;
+              }
             }
+            has_target_in_zone1 = (target_count_in_zone1 > 0);
+
+            // zone 2 check
+
+            int16_t zone2_x_min = id(zone2_x_begin).state;
+            int16_t zone2_x_max = id(zone2_x_end).state;
+            int16_t zone2_y_min = id(zone2_y_begin).state;
+            int16_t zone2_y_max = id(zone2_y_end).state;
+
+            if (p1_vaild && !p1_zone_ex_enter){
+              if (p1_x >= zone2_x_min && p1_x <= zone2_x_max && p1_y >= zone2_y_min && p1_y <= zone2_y_max){
+                  target_count_in_zone2 ++;
+              }
+            }
+            if (p2_vaild && !p2_zone_ex_enter){
+              if (p2_x >= zone2_x_min && p2_x <= zone2_x_max && p2_y >= zone2_y_min && p2_y <= zone2_y_max){
+                  target_count_in_zone2 ++;
+              }
+            }
+            if (p3_vaild && !p3_zone_ex_enter){
+              if (p3_x >= zone2_x_min && p3_x <= zone2_x_max && p3_y >= zone2_y_min && p3_y <= zone2_y_max){
+                  target_count_in_zone2 ++;
+              }
+            }
+
+            has_target_in_zone2 = (target_count_in_zone2 > 0);
+
+            // zone 3 check
+
+            int16_t zone3_x_min = id(zone3_x_begin).state;
+            int16_t zone3_x_max = id(zone3_x_end).state;
+            int16_t zone3_y_min = id(zone3_y_begin).state;
+            int16_t zone3_y_max = id(zone3_y_end).state;
+
+            if (p1_vaild && !p1_zone_ex_enter){
+              if (p1_x >= zone3_x_min && p1_x <= zone3_x_max && p1_y >= zone3_y_min && p1_y <= zone3_y_max){
+                  target_count_in_zone3 ++;
+              }
+            }
+            if (p2_vaild && !p2_zone_ex_enter){
+              if (p2_x >= zone3_x_min && p2_x <= zone3_x_max && p2_y >= zone3_y_min && p2_y <= zone3_y_max){
+                  target_count_in_zone3 ++;
+              }
+            }
+            if (p3_vaild && !p3_zone_ex_enter){
+              if (p3_x >= zone3_x_min && p3_x <= zone3_x_max && p3_y >= zone3_y_min && p3_y <= zone3_y_max){
+                  target_count_in_zone3 ++;
+              }
+            }
+            has_target_in_zone3 = (target_count_in_zone3 > 0);
+
           }
-          bool has_target_in_zone3 = (target_count_in_zone3 > 0);
+
+          // Angle, Position and Direction, idea from walberjunior.
+
+          float p1_angle = 0;
+          if (p1_vaild){
+            p1_angle = ((float)p1_x / (float)p1_y) * 180 / M_PI;;
+          }
+
+          std::basic_string<char> p1_position = "Static";
+          if (p1_speed > 0) {
+            p1_position = "Moving away";
+          } else if (p1_speed < 0) {
+            p1_position = "Approaching";
+          } 
+
+          std::basic_string<char> p1_direction = "None";
+          if (p1_x > 0) {
+            p1_direction = "Right";
+          } else if (p1_x < 0) {
+            p1_direction = "Left";
+          } else if (p1_y > 0){
+            p1_direction = "Middle";
+          }
+
+          float p2_angle = 0;
+          if (p2_vaild){
+            p2_angle = ((float)p2_x / (float)p2_y) * 180 / M_PI;;
+          }
+
+          std::basic_string<char> p2_position = "Static";;
+          if (p2_speed > 0) {
+            p2_position = "Moving away";
+          } else if (p2_speed < 0) {
+            p2_position = "Approaching";
+          } 
+          
+          std::basic_string<char> p2_direction = "None";
+          if (p2_x > 0) {
+            p2_direction = "Right";
+          } else if (p2_x < 0) {
+            p2_direction = "Left";
+          } else if (p2_y > 0){
+            p2_direction = "Middle";
+          }
+
+          float p3_angle = 0;
+          if (p3_vaild){
+            p3_angle = ((float)p3_x / (float)p3_y) * 180 / M_PI;;
+          }
+          
+          std::basic_string<char> p3_position = "Static";;
+          if (p3_speed > 0) {
+            p3_position = "Moving away";
+          } else if (p3_speed < 0) {
+            p3_position = "Approaching";
+          } 
+
+          std::basic_string<char> p3_direction = "None";
+          if (p3_x > 0) {
+            p3_direction = "Right";
+          } else if (p3_x < 0) {
+            p3_direction = "Left";
+          } else if (p3_y > 0){
+            p3_direction = "Middle";
+          }
+
+          if (id(target1_angle).state != p1_angle){
+            id(target1_angle).publish_state(p1_angle);
+          }
+          if (id(target2_angle).state != p2_angle){
+            id(target2_angle).publish_state(p2_angle);
+          }
+          if (id(target3_angle).state != p3_angle){
+            id(target3_angle).publish_state(p3_angle);
+          }
+
+          if (p1_position != id(target1_position).state){
+            id(target1_position).publish_state(p1_position);
+          }
+          if (p2_position != id(target2_position).state){
+            id(target2_position).publish_state(p2_position);
+          }
+          if (p3_position != id(target3_position).state){
+            id(target3_position).publish_state(p3_position);
+          }
+
+          if (p1_direction != id(target1_direction).state){
+            id(target1_direction).publish_state(p1_direction);
+          }
+          if (p2_direction != id(target2_direction).state){
+            id(target2_direction).publish_state(p2_direction);
+          }
+          if (p3_direction != id(target3_direction).state){
+            id(target3_direction).publish_state(p3_direction);
+          }
 
           // public all info
+
           if (id(target1_x).state != p1_x){
             id(target1_x).publish_state(p1_x);
           }
