@@ -1,5 +1,5 @@
 # This is a custom firmware for Human Presence Sensor 2A
-# https://screek.io/2a
+# https://docs.screek.io/2a
 
 esphome:
   name: screek-human-sensor-2a
@@ -8,14 +8,25 @@ esphome:
   name_add_mac_suffix: True
   platformio_options:
     board_build.flash_mode: dio
+    # board_build.f_cpu: 80000000L
   project: 
     name: Screek.Human_Presence_Sensor
     version: 2A
   on_boot:
-    - priority: 900
+    - priority: 100
       then:
         lambda: |-
           id(cpu_speed) = ESP.getCpuFreqMHz();
+    - priority: -200
+      then:
+        lambda: |-
+          id(zone1_target_exsits).publish_state(false);
+          id(zone2_target_exsits).publish_state(false);
+          id(zone3_target_exsits).publish_state(false);
+          id(zone_ex1_target_exsits).publish_state(false);
+
+preferences:
+    flash_write_interval: 5s
 
 external_components:
   - source:
@@ -40,35 +51,31 @@ globals:
     type: unsigned long
     restore_value: no
     initial_value: '0'
+  - id: init_zone_publish
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: last_illuminance
+    type: float
+    restore_value: no
+    initial_value: "-1"
 
 improv_serial:
   
-# Enable logging
 logger:
-  # level: VERY_VERBOSE
 
 debug:
   update_interval: 30s
 
-text_sensor:
-  - platform: debug
-    reset_reason:
-      name: "Reset Reason"
-      disabled_by_default: True
-  - platform: wifi_info
-    mac_address:
-      name: ESP MAC
-      entity_category: "diagnostic"
-      disabled_by_default: True
-
 api:
 
 ota:
-  password: "all-things-in-their-being-are-good-for-something" # words by Socrates
+  # use your own ota password plz. this is a words by Socrates.
+  password: "all-things-in-their-being-are-good-for-something"
   safe_mode: False
 
 wifi:
-  power_save_mode: NONE
+  power_save_mode: LIGHT
   reboot_timeout: 10min
   ap:
     ssid: "HUMAN-SENSOR 2A"
@@ -78,10 +85,431 @@ captive_portal:
 web_server:
   port: 80
 
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "ESP Reset Reason"
+      icon: mdi:anchor
+      disabled_by_default: True
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+      entity_category: "diagnostic"
+      disabled_by_default: True
+      icon: mdi:ip-network
+    mac_address:
+      name: ESP MAC
+      entity_category: "diagnostic"
+      icon: mdi:ip-network
+      disabled_by_default: True
+  - platform: template
+    name: "Zone1 Info"
+    id: tips_zone1_conf
+    icon: mdi:information-outline
+    entity_category: config
+    lambda: |-
+      return {"Configure below" };
+    update_interval: 1000s
+  - platform: template
+    name: "Zone2 Info"
+    id: tips_zone2_conf
+    icon: mdi:information-outline
+    entity_category: config
+    lambda: |-
+      return {"Configure below" };
+    update_interval: 1000s
+  - platform: template
+    name: "Zone3 Info"
+    id: tips_zone3_conf
+    icon: mdi:information-outline
+    entity_category: config
+    lambda: |-
+      return {"Configure below" };
+    update_interval: 1000s
+  - platform: template
+    name: "Zout1 Info"
+    id: tips_zone_ex1_conf
+    icon: mdi:information-outline
+    entity_category: config
+    lambda: |-
+      return {"Zone Exclusion 1" };
+    update_interval: 1000s
+
+number:
+  - platform: template
+    name: "Any Presence Timeout"
+    id: any_presence_timeout
+    min_value: 0
+    max_value: 600
+    mode: box
+    device_class: duration
+    entity_category: config
+    unit_of_measurement: s
+    icon: mdi:timer-off
+    step: 1
+    optimistic: True
+    initial_value: 0
+    restore_value: True
+  - platform: template
+    name: "Zone1 Timeout"
+    id: zone1_x_timeout
+    min_value: 0
+    max_value: 600
+    mode: box
+    device_class: duration
+    entity_category: config
+    unit_of_measurement: s
+    icon: mdi:timer-off
+    step: 1
+    optimistic: True
+    initial_value: 0
+    restore_value: True
+  - platform: template
+    name: "Zone2 Timeout"
+    id: zone2_x_timeout
+    min_value: 0
+    max_value: 600
+    mode: box
+    device_class: duration
+    entity_category: config
+    unit_of_measurement: s
+    icon: mdi:timer-off
+    step: 1
+    optimistic: True
+    initial_value: 0
+    restore_value: True
+  - platform: template
+    name: "Zone3 Timeout"
+    id: zone3_x_timeout
+    min_value: 0
+    max_value: 600
+    mode: box
+    device_class: duration
+    entity_category: config
+    unit_of_measurement: s
+    icon: mdi:timer-off
+    step: 1
+    optimistic: True
+    initial_value: 0
+    restore_value: True
+  # Zone 1
+  - platform: template
+    name: Zone1 X-Begin
+    id: zone1_x_begin
+    min_value: -4000
+    max_value: 4000
+    mode: box
+    device_class: distance
+    entity_category: config
+    unit_of_measurement: mm
+    icon: mdi:arrow-left-bold
+    step: 10
+    optimistic: True
+    initial_value: 0
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone1_vaild
+  - platform: template
+    name: Zone1 X-End
+    id: zone1_x_end
+    mode: box
+    min_value: -4000
+    max_value: 4000
+    device_class: distance
+    unit_of_measurement: mm
+    entity_category: config
+    icon: mdi:arrow-right-bold
+    step: 10
+    initial_value: 0
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone1_vaild
+  - platform: template
+    name: Zone1 Y-Begin
+    id: zone1_y_begin
+    mode: box
+    min_value: 0
+    max_value: 6000
+    device_class: distance
+    entity_category: config
+    icon: mdi:arrow-up-bold
+    unit_of_measurement: mm
+    step: 10
+    initial_value: 0
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone1_vaild
+  - platform: template
+    name: Zone1 Y-End
+    id: zone1_y_end
+    icon: mdi:arrow-down-bold
+    mode: box
+    min_value: 0
+    max_value: 6000
+    initial_value: 0
+    entity_category: config
+    device_class: distance
+    unit_of_measurement: mm
+    step: 10
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone1_vaild
+  
+  # Zone 2
+  - platform: template
+    name: Zone2 X-Begin
+    id: zone2_x_begin
+    min_value: -4000
+    max_value: 4000
+    mode: box
+    device_class: distance
+    entity_category: config
+    unit_of_measurement: mm
+    icon: mdi:arrow-left-bold
+    step: 10
+    optimistic: True
+    initial_value: 0
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone2_vaild
+  - platform: template
+    name: Zone2 X-End
+    id: zone2_x_end
+    mode: box
+    min_value: -4000
+    max_value: 4000
+    device_class: distance
+    unit_of_measurement: mm
+    entity_category: config
+    icon: mdi:arrow-right-bold
+    step: 10
+    initial_value: 0
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone2_vaild
+  - platform: template
+    name: Zone2 Y-Begin
+    id: zone2_y_begin
+    mode: box
+    min_value: 0
+    max_value: 6000
+    device_class: distance
+    entity_category: config
+    icon: mdi:arrow-up-bold
+    unit_of_measurement: mm
+    step: 10
+    initial_value: 0
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone2_vaild
+  - platform: template
+    name: Zone2 Y-End
+    id: zone2_y_end
+    icon: mdi:arrow-down-bold
+    mode: box
+    min_value: 0
+    max_value: 6000
+    initial_value: 0
+    entity_category: config
+    device_class: distance
+    unit_of_measurement: mm
+    step: 10
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone2_vaild
+
+  # Zone 3
+  - platform: template
+    name: Zone3 X-Begin
+    id: zone3_x_begin
+    min_value: -4000
+    max_value: 4000
+    mode: box
+    device_class: distance
+    entity_category: config
+    unit_of_measurement: mm
+    icon: mdi:arrow-left-bold
+    step: 10
+    optimistic: True
+    initial_value: 0
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone3_vaild
+  - platform: template
+    name: Zone3 X-End
+    id: zone3_x_end
+    mode: box
+    min_value: -4000
+    max_value: 4000
+    device_class: distance
+    unit_of_measurement: mm
+    entity_category: config
+    icon: mdi:arrow-right-bold
+    step: 10
+    initial_value: 0
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone3_vaild
+  - platform: template
+    name: Zone3 Y-Begin
+    id: zone3_y_begin
+    mode: box
+    min_value: 0
+    max_value: 6000
+    device_class: distance
+    entity_category: config
+    icon: mdi:arrow-up-bold
+    unit_of_measurement: mm
+    step: 10
+    initial_value: 0
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone3_vaild
+  - platform: template
+    name: Zone3 Y-End
+    id: zone3_y_end
+    icon: mdi:arrow-down-bold
+    mode: box
+    min_value: 0
+    max_value: 6000
+    initial_value: 0
+    entity_category: config
+    device_class: distance
+    unit_of_measurement: mm
+    step: 10
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zone3_vaild
+  
+  # Zout1
+  - platform: template
+    name: Zout1 X-Begin
+    id: zone_ex1_x_begin
+    min_value: -4000
+    max_value: 4000
+    mode: box
+    device_class: distance
+    entity_category: config
+    unit_of_measurement: mm
+    icon: mdi:arrow-left-bold
+    step: 10
+    optimistic: True
+    initial_value: 0
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zout1_vaild
+  - platform: template
+    name: Zout1 X-End
+    id: zone_ex1_x_end
+    mode: box
+    min_value: -4000
+    max_value: 4000
+    device_class: distance
+    unit_of_measurement: mm
+    entity_category: config
+    icon: mdi:arrow-right-bold
+    step: 10
+    initial_value: 0
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zout1_vaild
+  - platform: template
+    name: Zout1 Y-Begin
+    id: zone_ex1_y_begin
+    mode: box
+    min_value: 0
+    max_value: 6000
+    device_class: distance
+    entity_category: config
+    icon: mdi:arrow-up-bold
+    unit_of_measurement: mm
+    step: 10
+    initial_value: 0
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zout1_vaild
+  - platform: template
+    name: Zout1 Y-End
+    id: zone_ex1_y_end
+    icon: mdi:arrow-down-bold
+    mode: box
+    min_value: 0
+    max_value: 6000
+    initial_value: 0
+    entity_category: config
+    device_class: distance
+    unit_of_measurement: mm
+    step: 10
+    optimistic: True
+    restore_value: True
+    on_value: 
+      then:
+        - script.execute: check_zout1_vaild
+
 binary_sensor:
   - platform: status
     name: Online
     id: ink_ha_connected
+  - platform: template
+    name: "Any Presence"
+    id: any_target_exsits
+    device_class: occupancy
+    filters:
+      - delayed_off: !lambda |-
+          return id(any_presence_timeout).state * 1000.0;
+  - platform: template
+    name: "Zone1 Presence"
+    id: zone1_target_exsits
+    device_class: occupancy
+    filters:
+      - delayed_off: !lambda |-
+          return id(zone1_x_timeout).state * 1000.0;
+  - platform: template
+    name: "Zone2 Presence"
+    id: zone2_target_exsits
+    device_class: occupancy
+    filters:
+      - delayed_off: !lambda |-
+          return id(zone2_x_timeout).state * 1000.0;
+  - platform: template
+    name: "Zone3 Presence"
+    id: zone3_target_exsits
+    device_class: occupancy
+    filters:
+      - delayed_off: !lambda |-
+          return id(zone3_x_timeout).state * 1000.0;
+  - platform: template
+    name: "Zout1 Presence"
+    id: zone_ex1_target_exsits
+    icon: mdi:account-multiple-remove
+    device_class: occupancy
 
 i2c:
   sda: GPIO7
@@ -89,11 +517,93 @@ i2c:
   scan: true
   id: bus_a
 
+script:
+  - id: check_zone1_vaild
+    then:
+      - lambda: |-
+          if (id(zone1_x_begin).state > id(zone1_x_end).state){
+            id(tips_zone1_conf).publish_state("Err: X-Begin > X-End");
+            return;
+          }
+          if (id(zone1_y_begin).state > id(zone1_y_end).state){
+            id(tips_zone1_conf).publish_state("Err: Y-Begin > Y-End");
+            return;
+          }
+          if (id(zone1_x_begin).state == 0, id(zone1_x_end).state == 0, id(zone1_y_begin).state == 0, id(zone1_y_end).state == 0){
+            id(tips_zone1_conf).publish_state("Configure below");
+            return;
+          }
+
+          int x_size = id(zone1_x_end).state - id(zone1_x_begin).state;
+          int y_size = id(zone1_y_end).state - id(zone1_y_begin).state;
+
+          char combined[80]; 
+          sprintf(combined, "Curr Size: %d x %d", x_size, y_size);
+          id(tips_zone1_conf).publish_state(combined);
+  - id: check_zone2_vaild
+    then:
+      - lambda: |-
+          if (id(zone2_x_begin).state > id(zone2_x_end).state){
+            id(tips_zone2_conf).publish_state("Err: X-Begin > X-End");
+            return;
+          }
+          if (id(zone2_y_begin).state > id(zone2_y_end).state){
+            id(tips_zone2_conf).publish_state("Err: Y-Begin > Y-End");
+            return;
+          }
+          if (id(zone2_x_begin).state == 0, id(zone2_x_end).state == 0, id(zone2_y_begin).state == 0, id(zone2_y_end).state == 0){
+            id(tips_zone2_conf).publish_state("Configure below");
+            return;
+          }
+
+          int x_size = id(zone2_x_end).state - id(zone2_x_begin).state;
+          int y_size = id(zone2_y_end).state - id(zone2_y_begin).state;
+
+          char combined[80]; 
+          sprintf(combined, "Curr Size: %d x %d", x_size, y_size);
+          id(tips_zone2_conf).publish_state(combined);
+  - id: check_zone3_vaild
+    then:
+      - lambda: |-
+          if (id(zone3_x_begin).state > id(zone3_x_end).state){
+            id(tips_zone3_conf).publish_state("Err: X-Begin > X-End");
+            return;
+          }
+          if (id(zone3_y_begin).state > id(zone3_y_end).state){
+            id(tips_zone3_conf).publish_state("Err: Y-Begin > Y-End");
+            return;
+          }
+          if (id(zone3_x_begin).state == 0, id(zone3_x_end).state == 0, id(zone3_y_begin).state == 0, id(zone3_y_end).state == 0){
+            id(tips_zone3_conf).publish_state("Configure below");
+            return;
+          }
+
+          int x_size = id(zone3_x_end).state - id(zone3_x_begin).state;
+          int y_size = id(zone3_y_end).state - id(zone3_y_begin).state;
+
+          char combined[80]; 
+          sprintf(combined, "Curr Size: %d x %d", x_size, y_size);
+          id(tips_zone3_conf).publish_state(combined);
+  - id: check_zout1_vaild
+    then:
+      - lambda: |-
+          if (id(zone_ex1_x_begin).state > id(zone_ex1_x_end).state){
+            id(tips_zone_ex1_conf).publish_state("Err: X-Begin > X-End");
+            return;
+          }
+          if (id(zone_ex1_y_begin).state > id(zone_ex1_y_end).state){
+            id(tips_zone_ex1_conf).publish_state("Err: Y-Begin > Y-End");
+            return;
+          }
+          id(tips_zone_ex1_conf).publish_state("Zone Exclusion 1");
+
 sensor:
   - platform: template
     name: "ESP CPU Speed"
     accuracy_decimals: 0
+    icon: mdi:cpu-32-bit
     unit_of_measurement: Mhz
+    disabled_by_default: True
     lambda: |-
       return (id(cpu_speed));
     entity_category: "diagnostic"
@@ -107,7 +617,7 @@ sensor:
     update_interval: 45s
     entity_category: "diagnostic"
   - platform: uptime
-    name: Uptime
+    name: ESP Uptime
     id: sys_uptime
     update_interval: 60s
   - platform: wifi_signal 
@@ -126,7 +636,60 @@ sensor:
     update_interval: 60s
   - platform: bh1750
     name: "Illuminance"
+    accuracy_decimals: 1
+    id: bh1750_light
     update_interval: 1s
+    filters:
+      - lambda: !lambda |-
+          if (id(last_illuminance) == x){
+            return {};
+          }
+          if (id(bh1750_fast_update).state){
+            id(last_illuminance) = x;
+            // ESP_LOGD("custom", "Fast Update BH1850");
+            return x;
+          }
+          if (abs(id(last_illuminance) - x) > 1){
+
+              id(last_illuminance) = x;
+              return x;
+          }
+          return {};
+
+  #-------------------------------------#
+  # 高级雷达数据
+  - platform: template
+    name: "All Target Counts"
+    id: all_target_count
+    accuracy_decimals: 0
+    icon: "mdi:counter"
+    unit_of_measurement: "targets"
+  - platform: template
+    name: "Zone1 Target Counts"
+    id: zone1_target_count
+    accuracy_decimals: 0
+    icon: "mdi:counter"
+    unit_of_measurement: "targets"
+  - platform: template
+    name: "Zone2 Target Counts"
+    id: zone2_target_count
+    accuracy_decimals: 0
+    icon: "mdi:counter"
+    unit_of_measurement: "targets"
+  - platform: template
+    name: "Zone3 Target Counts"
+    id: zone3_target_count
+    accuracy_decimals: 0
+    icon: "mdi:counter"
+    unit_of_measurement: "targets"
+  - platform: template
+    name: "Zout1 Target Counts"
+    id: zone_ex1_target_count
+    accuracy_decimals: 0
+    icon: mdi:account-multiple-minus-outline
+    unit_of_measurement: "targets"
+
+  # Target 1
   - platform: template
     name: "Target1 X"
     id: target1_x
@@ -144,7 +707,7 @@ sensor:
   - platform: template
     name: "Target1 Speed"
     id: target1_speed
-    accuracy_decimals: 0
+    accuracy_decimals: 2
     unit_of_measurement: 'm/s'
     state_class: measurement
     device_class: speed
@@ -155,6 +718,8 @@ sensor:
     unit_of_measurement: 'mm'
     state_class: measurement
     device_class: distance
+  
+  # Target 2
   - platform: template
     name: "Target2 X"
     id: target2_x
@@ -183,6 +748,8 @@ sensor:
     unit_of_measurement: 'mm'
     state_class: measurement
     device_class: distance
+
+  # Target 3
   - platform: template
     name: "Target3 X"
     id: target3_x
@@ -212,6 +779,7 @@ sensor:
     state_class: measurement
     device_class: distance
 
+
 light:
   - platform: status_led
     name: sys_status
@@ -232,6 +800,33 @@ output:
   - platform: gpio
     id: board_info_ed
     pin: GPIO12
+
+
+switch:
+  - platform: factory_reset
+    name: Factory Reset
+    disabled_by_default: True
+    icon: mdi:heart-broken
+  - platform: template
+    name: Zout1 Enable
+    id: zone_ex1_enable
+    optimistic: True
+    icon: mdi:account-cancel
+    entity_category: config
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: template
+    name: Illuminance Fast-Update
+    id: bh1750_fast_update
+    optimistic: True
+    entity_category: diagnostic
+    restore_mode: RESTORE_DEFAULT_OFF
+    icon: mdi:run-fast
+
+button:
+  - platform: restart
+    icon: mdi:power-cycle
+    name: "ESP Reboot"
+    entity_category: diagnostic
 
 uart:
   id: uart_bus
@@ -255,13 +850,13 @@ uart:
     after:
      delimiter: [0X55, 0XCC]
     sequence:
-      # - lambda: UARTDebug::log_hex(direction, bytes, ' ');
       - lambda: |-
-          if ((millis() - id(last_update_ld2450)) <= 1000) { 
+          if ((millis() - id(last_update_ld2450)) <= 500) { 
             return;
           };
           id(last_update_ld2450) = millis();
 
+          // p1
           int16_t p1_x = (uint16_t((bytes[5] << 8) | bytes[4] ));
           if ((bytes[5] & 0x80) >> 7){
             p1_x -= pow(2, 15); 
@@ -284,6 +879,7 @@ uart:
           }
           int16_t p1_distance_resolution = (uint16_t((bytes[11] << 8) | bytes[10] )); 
 
+          // p2
           int16_t p2_x = (uint16_t((bytes[13] << 8) | bytes[12] ));
           if ((bytes[13] & 0x80) >> 7){
             p2_x -=  pow(2, 15); 
@@ -306,6 +902,7 @@ uart:
           }
           int16_t p2_distance_resolution = (uint16_t((bytes[19] << 8) | bytes[18] )); 
 
+          // p3
           int16_t p3_x = (uint16_t((bytes[21] << 8) | bytes[20] ));
           if ((bytes[21] & 0x80) >> 7){
             p3_x -=  pow(2, 15); 
@@ -326,28 +923,208 @@ uart:
           }else{
             p3_speed = 0 - p3_speed;
           }
-          int16_t p3_distance_resolution = (uint16_t((bytes[27] << 8) | bytes[26] ));
+          
+          int16_t p3_distance_resolution = (uint16_t((bytes[27] << 8) | bytes[26] )); 
 
-          id(target1_x).publish_state(p1_x);
-          id(target1_y).publish_state(p1_y);
-          id(target1_speed).publish_state(p1_speed);
-          id(target1_resolution).publish_state(p1_distance_resolution);
+          bool p1_vaild = (p1_x != 0 || p1_y > 0);
+          bool p2_vaild = (p2_x != 0 || p2_y > 0);
+          bool p3_vaild = (p3_x != 0 || p3_y > 0);
 
-          id(target2_x).publish_state(p2_x);
-          id(target2_y).publish_state(p2_y);
-          id(target2_speed).publish_state(p2_speed);
-          id(target2_resolution).publish_state(p2_distance_resolution);
+          // zone exlude 1
 
-          id(target3_x).publish_state(p3_x);
-          id(target3_y).publish_state(p3_y);
-          id(target3_speed).publish_state(p3_speed);
-          id(target3_resolution).publish_state(p3_distance_resolution);
+          int16_t target_count_in_zone_ex1 = 0;
 
-button:
-  - platform: restart
-    icon: mdi:power-cycle
-    name: "ESP Reboot"
-  - platform: factory_reset
-    disabled_by_default: True
-    name: Factory Reset
-    id: factory_reset_all
+          int16_t zone_ex1_x_min = id(zone_ex1_x_begin).state;
+          int16_t zone_ex1_x_max = id(zone_ex1_x_end).state;
+          int16_t zone_ex1_y_min = id(zone_ex1_y_begin).state;
+          int16_t zone_ex1_y_max = id(zone_ex1_y_end).state;
+
+          bool p1_zone_ex_enter = false;
+          bool p2_zone_ex_enter = false;
+          bool p3_zone_ex_enter = false;
+
+          if (id(zone_ex1_enable).state){
+            if (p1_vaild){
+              if (p1_x >= zone_ex1_x_min && p1_x <= zone_ex1_x_max && p1_y >= zone_ex1_y_min && p1_y <= zone_ex1_y_max){
+                  p1_zone_ex_enter = true;
+                  target_count_in_zone_ex1 ++;
+              }
+            }
+            if (p2_vaild){
+              if (p2_x >= zone_ex1_x_min && p2_x <= zone_ex1_x_max && p2_y >= zone_ex1_y_min && p2_y <= zone_ex1_y_max){
+                  p2_zone_ex_enter = true;
+                  target_count_in_zone_ex1 ++;
+              }
+            }
+            if (p3_vaild){
+              if (p3_x >= zone_ex1_x_min && p3_x <= zone_ex1_x_max && p3_y >= zone_ex1_y_min && p3_y <= zone_ex1_y_max){
+                  p3_zone_ex_enter = true;
+                  target_count_in_zone_ex1 ++;
+              }
+            }
+          }
+
+          bool has_target_in_zone_ex1 = (target_count_in_zone_ex1 > 0);
+          
+          int16_t all_target_counts = 0;
+          if (p1_vaild && !p1_zone_ex_enter){
+            all_target_counts ++;
+          }
+          if (p2_vaild && !p2_zone_ex_enter){
+            all_target_counts ++;
+          }
+          if (p3_vaild && !p3_zone_ex_enter){
+            all_target_counts ++;
+          }
+
+          bool has_target_in_zone_all = (all_target_counts > 0);
+
+          // zone 1 check
+
+          int16_t target_count_in_zone1 = 0;
+          int16_t zone1_x_min = id(zone1_x_begin).state;
+          int16_t zone1_x_max = id(zone1_x_end).state;
+          int16_t zone1_y_min = id(zone1_y_begin).state;
+          int16_t zone1_y_max = id(zone1_y_end).state;
+
+          if (p1_vaild && !p1_zone_ex_enter){
+            if (p1_x >= zone1_x_min && p1_x <= zone1_x_max && p1_y >= zone1_y_min && p1_y <= zone1_y_max){
+                target_count_in_zone1 ++;
+            }
+          }
+          if (p2_vaild && !p2_zone_ex_enter){
+            if (p2_x >= zone1_x_min && p2_x <= zone1_x_max && p2_y >= zone1_y_min && p2_y <= zone1_y_max){
+                target_count_in_zone1 ++;
+            }
+          }
+          if (p3_vaild && !p3_zone_ex_enter){
+            if (p3_x >= zone1_x_min && p3_x <= zone1_x_max && p3_y >= zone1_y_min && p3_y <= zone1_y_max){
+                target_count_in_zone1 ++;
+            }
+          }
+          bool has_target_in_zone1 = (target_count_in_zone1 > 0);
+
+          // zone 2 check
+
+          int16_t target_count_in_zone2 = 0;
+          int16_t zone2_x_min = id(zone2_x_begin).state;
+          int16_t zone2_x_max = id(zone2_x_end).state;
+          int16_t zone2_y_min = id(zone2_y_begin).state;
+          int16_t zone2_y_max = id(zone2_y_end).state;
+
+          if (p1_vaild && !p1_zone_ex_enter){
+            if (p1_x >= zone2_x_min && p1_x <= zone2_x_max && p1_y >= zone2_y_min && p1_y <= zone2_y_max){
+                target_count_in_zone2 ++;
+            }
+          }
+          if (p2_vaild && !p2_zone_ex_enter){
+            if (p2_x >= zone2_x_min && p2_x <= zone2_x_max && p2_y >= zone2_y_min && p2_y <= zone2_y_max){
+                target_count_in_zone2 ++;
+            }
+          }
+          if (p3_vaild && !p3_zone_ex_enter){
+            if (p3_x >= zone2_x_min && p3_x <= zone2_x_max && p3_y >= zone2_y_min && p3_y <= zone2_y_max){
+                target_count_in_zone2 ++;
+            }
+          }
+
+          bool has_target_in_zone2 = (target_count_in_zone2 > 0);
+
+          // zone 3 check
+
+          int16_t target_count_in_zone3 = 0;
+          int16_t zone3_x_min = id(zone3_x_begin).state;
+          int16_t zone3_x_max = id(zone3_x_end).state;
+          int16_t zone3_y_min = id(zone3_y_begin).state;
+          int16_t zone3_y_max = id(zone3_y_end).state;
+
+          if (p1_vaild && !p1_zone_ex_enter){
+            if (p1_x >= zone3_x_min && p1_x <= zone3_x_max && p1_y >= zone3_y_min && p1_y <= zone3_y_max){
+                target_count_in_zone3 ++;
+            }
+          }
+          if (p2_vaild && !p2_zone_ex_enter){
+            if (p2_x >= zone3_x_min && p2_x <= zone3_x_max && p2_y >= zone3_y_min && p2_y <= zone3_y_max){
+                target_count_in_zone3 ++;
+            }
+          }
+          if (p3_vaild && !p3_zone_ex_enter){
+            if (p3_x >= zone3_x_min && p3_x <= zone3_x_max && p3_y >= zone3_y_min && p3_y <= zone3_y_max){
+                target_count_in_zone3 ++;
+            }
+          }
+          bool has_target_in_zone3 = (target_count_in_zone3 > 0);
+
+          // public all info
+          if (id(target1_x).state != p1_x){
+            id(target1_x).publish_state(p1_x);
+          }
+          if (id(target1_y).state != p1_y){
+            id(target1_y).publish_state(p1_y);
+          }
+
+          float p1_m_speed = float(p1_speed) / 100.0;
+          if (id(target1_speed).state != p1_m_speed){
+            id(target1_speed).publish_state(p1_m_speed);
+          }
+          if (id(target1_resolution).state != p1_distance_resolution){
+            id(target1_resolution).publish_state(p1_distance_resolution);
+          }
+
+          if (id(target2_x).state != p2_x){
+            id(target2_x).publish_state(p2_x);
+          }
+          if (id(target2_y).state != p2_y){
+            id(target2_y).publish_state(p2_y);
+          }
+          if (id(target2_speed).state != p2_speed){
+            id(target2_speed).publish_state(p2_speed);
+          }
+          if (id(target2_resolution).state != p2_distance_resolution){
+            id(target2_resolution).publish_state(p2_distance_resolution);
+          }
+
+          if (id(target3_x).state != p3_x){
+            id(target3_x).publish_state(p3_x);
+          }
+          if (id(target3_y).state != p3_y){
+            id(target3_y).publish_state(p3_y);
+          }
+          if (id(target3_speed).state != p3_speed){
+            id(target3_speed).publish_state(p3_speed);
+          }
+          if (id(target3_resolution).state != p3_distance_resolution){
+            id(target3_resolution).publish_state(p3_distance_resolution);
+          }
+
+          // publish target info
+          
+          if (id(all_target_count).state != all_target_counts){
+            id(all_target_count).publish_state(all_target_counts);
+            id(any_target_exsits).publish_state(has_target_in_zone_all);
+          }
+
+          if (id(zone1_target_count).state != target_count_in_zone1){
+            id(zone1_target_count).publish_state(target_count_in_zone1);
+            id(zone1_target_exsits).publish_state(has_target_in_zone1);
+          }
+
+          if (id(zone2_target_count).state != target_count_in_zone2){
+            id(zone2_target_count).publish_state(target_count_in_zone2);
+            id(zone2_target_exsits).publish_state(has_target_in_zone2);
+          }
+
+          if (id(zone3_target_count).state != target_count_in_zone3){
+            id(zone3_target_count).publish_state(target_count_in_zone3);
+            id(zone3_target_exsits).publish_state(has_target_in_zone3);
+          }
+          
+          // zout
+          if (id(zone_ex1_target_count).state != target_count_in_zone_ex1){
+            id(zone_ex1_target_count).publish_state(target_count_in_zone_ex1);
+            id(zone_ex1_target_exsits).publish_state(has_target_in_zone_ex1);
+          }
+
+          if (!id(init_zone_publish)){
+            id(init_zone_publish) = true;
+          }

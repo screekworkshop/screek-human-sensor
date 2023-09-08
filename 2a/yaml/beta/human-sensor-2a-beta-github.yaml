@@ -1,6 +1,6 @@
 # This is a custom firmware for Human Presence Sensor 2A
 # https://docs.screek.io/2a
-# Current version synchronized with public version: V230818_2_beta
+# Current version synchronized with public version: V230907_1_beta
 
 esphome:
   name: screek-human-sensor-2a
