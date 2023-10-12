@@ -60,6 +60,10 @@ globals:
     type: float
     restore_value: no
     initial_value: "-1"
+  - id: last_illuminance_timestamp
+    type: int
+    restore_value: no
+    initial_value: "-1"
 
 improv_serial:
   
@@ -686,17 +690,25 @@ sensor:
     update_interval: 1s
     filters:
       - lambda: !lambda |-
+          auto time = id(time_now).utcnow().timestamp;
           if (id(last_illuminance) == x){
-            return {};
+            if (time >= (id(last_illuminance_timestamp) + 60)){
+              id(last_illuminance_timestamp) = time;
+              return x;
+            } else {
+              return {};
+            }
           }
           if (id(bh1750_fast_update).state){
             id(last_illuminance) = x;
             // ESP_LOGD("custom", "Fast Update BH1850");
+            id(last_illuminance_timestamp) = time;
             return x;
           }
           if (abs(id(last_illuminance) - x) > 1){
 
               id(last_illuminance) = x;
+              id(last_illuminance_timestamp) = time;
               return x;
           }
           return {};
