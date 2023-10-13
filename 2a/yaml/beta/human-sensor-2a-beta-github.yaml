@@ -688,6 +688,7 @@ sensor:
     accuracy_decimals: 1
     id: bh1750_light
     update_interval: 1s
+    force_update: true
     filters:
       - lambda: !lambda |-
           auto time = id(time_now).utcnow().timestamp;
