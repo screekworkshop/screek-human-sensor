@@ -574,7 +574,7 @@ script:
             id(tips_zone1_conf).publish_state("Err: Y-Begin > Y-End");
             return;
           }
-          if (id(zone1_x_begin).state == 0, id(zone1_x_end).state == 0, id(zone1_y_begin).state == 0, id(zone1_y_end).state == 0){
+          if (id(zone1_x_begin).state == 0 && id(zone1_x_end).state == 0 && id(zone1_y_begin).state == 0 && id(zone1_y_end).state == 0){
             id(tips_zone1_conf).publish_state("Configure below");
             return;
           }
@@ -596,7 +596,7 @@ script:
             id(tips_zone2_conf).publish_state("Err: Y-Begin > Y-End");
             return;
           }
-          if (id(zone2_x_begin).state == 0, id(zone2_x_end).state == 0, id(zone2_y_begin).state == 0, id(zone2_y_end).state == 0){
+          if (id(zone2_x_begin).state == 0 && id(zone2_x_end).state == 0 && id(zone2_y_begin).state == 0 && id(zone2_y_end).state == 0){
             id(tips_zone2_conf).publish_state("Configure below");
             return;
           }
@@ -618,7 +618,7 @@ script:
             id(tips_zone3_conf).publish_state("Err: Y-Begin > Y-End");
             return;
           }
-          if (id(zone3_x_begin).state == 0, id(zone3_x_end).state == 0, id(zone3_y_begin).state == 0, id(zone3_y_end).state == 0){
+          if (id(zone3_x_begin).state == 0 && id(zone3_x_end).state == 0 && id(zone3_y_begin).state == 0 && id(zone3_y_end).state == 0){
             id(tips_zone3_conf).publish_state("Configure below");
             return;
           }
