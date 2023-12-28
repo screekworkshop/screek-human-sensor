@@ -107,7 +107,7 @@ text_sensor:
     name: "Zone1 Info"
     id: tips_zone1_conf
     icon: mdi:information-outline
-    entity_category: config
+    entity_category: diagnostic
     lambda: |-
       return {"Configure below" };
     update_interval: 1000s
@@ -115,7 +115,7 @@ text_sensor:
     name: "Zone2 Info"
     id: tips_zone2_conf
     icon: mdi:information-outline
-    entity_category: config
+    entity_category: diagnostic
     lambda: |-
       return {"Configure below" };
     update_interval: 1000s
@@ -123,7 +123,7 @@ text_sensor:
     name: "Zone3 Info"
     id: tips_zone3_conf
     icon: mdi:information-outline
-    entity_category: config
+    entity_category: diagnostic
     lambda: |-
       return {"Configure below" };
     update_interval: 1000s
@@ -131,7 +131,7 @@ text_sensor:
     name: "Zout1 Info"
     id: tips_zone_ex1_conf
     icon: mdi:information-outline
-    entity_category: config
+    entity_category: diagnostic
     lambda: |-
       return {"Zone Exclusion 1" };
     update_interval: 1000s
