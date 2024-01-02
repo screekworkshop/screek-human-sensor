@@ -19,6 +19,10 @@ https://www.reddit.com/r/screekworkshop/
 
 Happy DIYing!
 
+## 🙏
+The sensor builds and code have gotten a lot of concerted effort, and ingenuity, from many, many people.
+
+
 ## Something else to say
 
 We insist on keeping our principles of code openness on Home Assistant sensors because we strongly believe in it:
