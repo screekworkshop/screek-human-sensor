@@ -141,7 +141,7 @@ number:
     name: "Any Presence Timeout"
     id: any_presence_timeout
     min_value: 0
-    max_value: 600
+    max_value: 1800
     mode: box
     device_class: duration
     entity_category: config
@@ -155,7 +155,7 @@ number:
     name: "Zone1 Timeout"
     id: zone1_x_timeout
     min_value: 0
-    max_value: 600
+    max_value: 1800
     mode: box
     device_class: duration
     entity_category: config
@@ -169,7 +169,7 @@ number:
     name: "Zone2 Timeout"
     id: zone2_x_timeout
     min_value: 0
-    max_value: 600
+    max_value: 1800
     mode: box
     device_class: duration
     entity_category: config
@@ -183,7 +183,7 @@ number:
     name: "Zone3 Timeout"
     id: zone3_x_timeout
     min_value: 0
-    max_value: 600
+    max_value: 1800
     mode: box
     device_class: duration
     entity_category: config
