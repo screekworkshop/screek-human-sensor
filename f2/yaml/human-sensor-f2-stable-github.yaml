@@ -1,0 +1,419 @@
+# screek f2 yaml code
+# main ld1125h code from: https://github.com/patrick3399/Hi-Link_mmWave_Radar_ESPHome
+# 
+substitutions:
+  devicename: ""
+  upper_devicename: ""
+
+esphome:
+  name: screek-human-sensor-f2
+  comment: Screek Human Sensor F2
+  friendly_name: Human Sensor F2
+  name_add_mac_suffix: True
+  platformio_options:
+    board_build.flash_mode: dio
+    # board_build.f_cpu: 80000000L
+  project: 
+    name: Screek.Human_Presence_Sensor
+    version: F2
+  on_boot:
+    - priority: 100
+      then:
+        lambda: |-
+          id(cpu_speed) = ESP.getCpuFreqMHz();
+    - priority: -200
+      then:
+        - uart.write:
+            id: LD1125F_UART_BUS
+            data: !lambda |-
+              std::string th1st = "mth1=" + str_sprintf("%.0f",id(LD1125F_mth1).state) +"\r\n";
+              return std::vector<uint8_t>(th1st.begin(), th1st.end());
+        - uart.write:
+            id: LD1125F_UART_BUS
+            data: !lambda |-
+              std::string th2st = "mth2=" + str_sprintf("%.0f",id(LD1125F_mth2).state) +"\r\n";
+              return std::vector<uint8_t>(th2st.begin(), th2st.end());
+        - uart.write:
+            id: LD1125F_UART_BUS
+            data: !lambda |-
+              std::string th3st = "mth3=" + str_sprintf("%.0f",id(LD1125F_mth3).state) +"\r\n";
+              return std::vector<uint8_t>(th3st.begin(), th3st.end());
+        - uart.write:
+            id: LD1125F_UART_BUS
+            data: !lambda |-
+              std::string rmaxst = "rmax=" + str_sprintf("%.1f",id(LD1125F_rmax).state) +"\r\n";
+              return std::vector<uint8_t>(rmaxst.begin(), rmaxst.end());
+
+preferences:
+    flash_write_interval: 5s
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/screekworkshop/custom_components_support_for_screek_2a
+      ref: main
+    components: [esp32, uart]
+  - source:
+      type: git
+      url: https://github.com/ssieb/custom_components #Thanks for @ssieb components.
+    components: [ serial ]
+  
+esp32:
+  board: lolin_c3_mini
+  framework:
+    type: arduino
+    version: 2.0.9
+    platform_version: 6.3.0
+
+globals:
+  - id: cpu_speed
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: last_update_ld2450
+    type: unsigned long
+    restore_value: no
+    initial_value: '0'
+  - id: init_zone_publish
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: last_illuminance
+    type: float
+    restore_value: no
+    initial_value: "-1"
+  - id: LD1125F_Last_Time
+    type: time_t
+    restore_value: no
+    initial_value: time(NULL)
+  - id: LD1125F_Last_Mov_Time
+    type: time_t
+    restore_value: no
+    initial_value: time(NULL)
+  - id: LD1125F_Clearence_Status
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+improv_serial:
+  
+logger:
+
+debug:
+  update_interval: 30s
+
+# Enable Home Assistant API
+api:
+  # encryption:
+    # key: "your-api-key"
+
+ota:
+  password: "your-ota-password"
+  safe_mode: False
+
+wifi:
+  # output_power: 15dB
+  power_save_mode: LIGHT
+  # power_save_mode: NONE
+  reboot_timeout: 10min
+  ap:
+    ssid: "HUMAN-SENSOR F2"
+
+captive_portal:
+
+web_server:
+  port: 80
+  
+text_sensor:
+  # 公共代码部分(23年9月2日_11时53分_)
+  - platform: debug
+    reset_reason:
+      name: "ESP Reset Reason"
+      icon: mdi:anchor
+      disabled_by_default: True
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+      entity_category: "diagnostic"
+      disabled_by_default: True
+      icon: mdi:ip-network
+    mac_address:
+      name: ESP MAC
+      entity_category: "diagnostic"
+      icon: mdi:ip-network
+      disabled_by_default: True
+  - platform: serial
+    uart_id: LD1125F_UART_BUS
+    name: ${upper_devicename} UART Text
+    id: LD1125F_UART_Text
+    icon: "mdi:format-text"
+    entity_category: "diagnostic"
+    internal: False #If Don't Want to See UART Receive Data, Set To True
+    on_value:
+      lambda: |-
+        if (id(LD1125F_UART_Text).state.substr(0,3) == "occ") {
+          id(LD1125F_Distance).publish_state(atof(id(LD1125F_UART_Text).state.substr(9).c_str()));
+          if ((time(NULL)-id(LD1125F_Last_Mov_Time))>id(LD1125F_Mov_Time).state) {
+            id(LD1125F_Occupancy).publish_state("Occupancy");
+            if (id(LD1125F_MovOcc_Binary).state == false) {
+              id(LD1125F_MovOcc_Binary).publish_state(true);
+            }
+            if (id(LD1125F_Mov_Binary).state == true) {
+              id(LD1125F_Mov_Binary).publish_state(false);
+            }
+          }
+          if (id(LD1125F_MovOcc_Binary).state == false) {
+            id(LD1125F_MovOcc_Binary).publish_state(true);
+          }
+          id(LD1125F_Last_Time) = time(NULL);
+          if (id(LD1125F_Clearence_Status) == true) {
+            id(LD1125F_Clearence_Status) = false;
+          }
+        }
+        else if (id(LD1125F_UART_Text).state.substr(0,3) == "mov") {
+          id(LD1125F_Distance).publish_state(atof(id(LD1125F_UART_Text).state.substr(9).c_str()));
+          id(LD1125F_Occupancy).publish_state("Movement");
+          if (id(LD1125F_MovOcc_Binary).state == false) {
+            id(LD1125F_MovOcc_Binary).publish_state(true);
+          }
+          if (id(LD1125F_Mov_Binary).state == false) {
+            id(LD1125F_Mov_Binary).publish_state(true);
+          }
+          id(LD1125F_Last_Mov_Time) = time(NULL);
+          id(LD1125F_Last_Time) = time(NULL);
+          if (id(LD1125F_Clearence_Status) == true) {
+            id(LD1125F_Clearence_Status) = false;
+          }
+        }
+  - platform: template
+    name: ${upper_devicename} Occupancy Status
+    id: LD1125F_Occupancy
+    icon: "mdi:motion-sensor"
+
+
+binary_sensor:
+  - platform: status
+    name: Online
+    id: ink_ha_connected
+  - platform: template
+    name: ${upper_devicename} Occupancy or Movement
+    id: LD1125F_MovOcc_Binary
+    device_class: occupancy
+  - platform: template
+    name: ${upper_devicename} Movement
+    id: LD1125F_Mov_Binary
+    device_class: motion
+
+sensor:
+  - platform: template
+    name: "ESP CPU Speed"
+    accuracy_decimals: 0
+    icon: mdi:cpu-32-bit
+    unit_of_measurement: Mhz
+    disabled_by_default: True
+    lambda: |-
+      return (id(cpu_speed));
+    entity_category: "diagnostic"
+    update_interval: 600s
+  - platform: template
+    id: sys_esp_temperature
+    name: ESP Temperature
+    lambda: return temperatureRead();
+    unit_of_measurement: °C
+    device_class: TEMPERATURE
+    update_interval: 45s
+    entity_category: "diagnostic"
+  - platform: uptime
+    name: ESP Uptime
+    id: sys_uptime
+    update_interval: 60s
+  - platform: wifi_signal 
+    name: RSSI
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+  - platform: template
+    id: esp_memory
+    icon: mdi:memory
+    name: ESP Free Memory
+    lambda: return heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024;
+    unit_of_measurement: 'kB'
+    state_class: measurement
+    entity_category: "diagnostic"
+    update_interval: 60s
+  - platform: template
+    name: ${upper_devicename} Distance
+    id: LD1125F_Distance
+    icon: "mdi:signal-distance-variant"
+    unit_of_measurement: "m"
+    accuracy_decimals: 2
+    filters:    # Use Fliter To Debounce
+    - sliding_window_moving_average:
+        window_size: 8
+        send_every: 2
+    - heartbeat: 0.2s
+  - platform: bh1750
+    name: "Illuminance"
+    accuracy_decimals: 1
+    id: bh1750_light
+    update_interval: 1s
+
+light:
+  - platform: status_led
+    name: sys_status
+    pin: GPIO13
+    internal: True
+    restore_mode: ALWAYS_OFF
+  - platform: binary
+    name: "Red Info Light"
+    output: board_info_ed
+    entity_category: "config"
+    restore_mode: ALWAYS_OFF
+
+i2c:
+  sda: GPIO7
+  scl: GPIO11
+  scan: true
+  id: bus_a
+
+output:
+  - platform: gpio
+    id: board_info_ed
+    pin: GPIO12
+
+switch:
+  - platform: factory_reset
+    name: Factory Reset
+    disabled_by_default: True
+    icon: mdi:heart-broken
+
+button:
+  - platform: restart
+    icon: mdi:power-cycle
+    name: "ESP Reboot"
+    entity_category: diagnostic
+
+uart:
+  id: LD1125F_UART_BUS
+  rx_pin: GPIO5
+  tx_pin: GPIO4
+  baud_rate: 115200
+  data_bits: 8
+  stop_bits: 1
+  parity: NONE
+
+interval:
+  - interval: 1s #Clearance Scan Time
+    setup_priority: -200
+    then:
+      lambda: |-
+        if ((time(NULL)-id(LD1125F_Last_Time))>id(LD1125F_Clear_Time).state) {
+          if ((id(LD1125F_Clearence_Status) == false) || (id(LD1125F_Occupancy).state != "Clearance")) {
+            id(LD1125F_Occupancy).publish_state("Clearance");
+            id(LD1125F_Clearence_Status) = true;
+          }
+          if (id(LD1125F_MovOcc_Binary).state == true) {
+            id(LD1125F_MovOcc_Binary).publish_state(false);
+          }
+          if (id(LD1125F_Mov_Binary).state == true) {
+            id(LD1125F_Mov_Binary).publish_state(false);
+          }
+        }
+
+number:
+  - platform: template
+    name: ${upper_devicename} mth1 #mth1 is 0~2.8m Sensitivity.
+    id: LD1125F_mth1
+    icon: "mdi:cogs"
+    optimistic: true
+    entity_category: config
+    restore_value: true #If you don't want to store the setting at ESP, set it to false.
+    initial_value: "60.0" #Default mth1 Setting
+    min_value: 10.0
+    max_value: 600.0
+    step: 5.0
+    set_action:
+      then:
+        - uart.write:
+            id: LD1125F_UART_BUS
+            data: !lambda |-
+              std::string th1st = "mth1=" + str_sprintf("%.0f",x) +"\r\n";
+              return std::vector<uint8_t>(th1st.begin(), th1st.end());
+  - platform: template
+    name: ${upper_devicename} mth2 #mth2 is 2.8~8m Sensitivity.
+    id: LD1125F_mth2
+    icon: "mdi:cogs"
+    optimistic: true
+    entity_category: config
+    restore_value: true #If you don't want to store the setting at ESP, set it to false.
+    initial_value: "30" #Default mth2 Setting
+    min_value: 5
+    max_value: 300
+    step: 5
+    set_action:
+      then:
+        - uart.write:
+            id: LD1125F_UART_BUS
+            data: !lambda |-
+              std::string th2st = "mth2=" + str_sprintf("%.0f",x) +"\r\n";
+              return std::vector<uint8_t>(th2st.begin(), th2st.end());
+  - platform: template
+    name: ${upper_devicename} mth3 #mth3 is above 8m Sensitivity.
+    id: LD1125F_mth3
+    icon: "mdi:cogs"
+    entity_category: config
+    optimistic: true
+    restore_value: true #If you don't want to store the setting at ESP, set it to false.
+    initial_value: "20" #Default mth3 Setting
+    min_value: 5
+    max_value: 200
+    step: 5
+    set_action:
+      then:
+        - uart.write:
+            id: LD1125F_UART_BUS
+            data: !lambda |-
+              std::string th3st = "mth3=" + str_sprintf("%.0f",x) +"\r\n";
+              return std::vector<uint8_t>(th3st.begin(), th3st.end());
+  - platform: template
+    name: ${upper_devicename} Max Distance #rmax is max detection distance.
+    id: LD1125F_rmax
+    icon: "mdi:cogs"
+    entity_category: config
+    optimistic: true
+    unit_of_measurement: m
+    restore_value: true #If you don't want to store the setting at ESP, set it to false.
+    initial_value: "8" #Default rmax Setting
+    min_value: 0.4
+    max_value: 12
+    step: 0.2
+    set_action:
+      then:
+        - uart.write:
+            id: LD1125F_UART_BUS
+            data: !lambda |-
+              std::string rmaxst = "rmax=" + str_sprintf("%.1f",x) +"\r\n";
+              return std::vector<uint8_t>(rmaxst.begin(), rmaxst.end());
+  - platform: template
+    name: ${upper_devicename} Clearence Time
+    id: LD1125F_Clear_Time
+    icon: "mdi:cogs"
+    optimistic: true
+    entity_category: config
+    restore_value: true #If you don't want to store the setting at ESP, set it to false.
+    initial_value: "5" #LD1125F Mov/Occ > Clearence Time Here
+    min_value: 0.5
+    max_value: 20
+    step: 0.5
+  - platform: template
+    name: ${upper_devicename} Movement Time
+    id: LD1125F_Mov_Time
+    icon: "mdi:cogs"
+    optimistic: true
+    entity_category: config
+    restore_value: true #If you don't want to store the setting at ESP, set it to false.
+    initial_value: "1" #LD1125F Mov > Occ Time Here
+    min_value: 0.5
+    max_value: 10
+    step: 0.5
+
