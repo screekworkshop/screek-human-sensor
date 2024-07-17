@@ -108,8 +108,8 @@ api:
     # key: "your-api-key"
 
 ota:
-  password: "your-ota-password"
-  safe_mode: False
+  - platform: esphome
+    password: "your-ota-password"
 
 wifi:
   # output_power: 15dB
