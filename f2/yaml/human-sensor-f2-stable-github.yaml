@@ -125,7 +125,6 @@ web_server:
   port: 80
   
 text_sensor:
-  # 公共代码部分(23年9月2日_11时53分_)
   - platform: debug
     reset_reason:
       name: "ESP Reset Reason"
@@ -219,7 +218,7 @@ sensor:
     id: sys_esp_temperature
     name: ESP Temperature
     lambda: return temperatureRead();
-    unit_of_measurement: °C
+    unit_of_measurement: "°C"
     device_class: TEMPERATURE
     update_interval: 45s
     entity_category: "diagnostic"
