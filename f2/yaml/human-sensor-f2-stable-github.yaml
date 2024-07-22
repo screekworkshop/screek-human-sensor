@@ -98,6 +98,8 @@ globals:
 improv_serial:
   
 logger:
+  logs:
+    bh1750.sensor: INFO
 
 debug:
   update_interval: 30s
