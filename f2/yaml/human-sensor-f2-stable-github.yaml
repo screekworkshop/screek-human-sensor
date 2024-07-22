@@ -148,6 +148,13 @@ text_sensor:
     icon: "mdi:format-text"
     entity_category: "diagnostic"
     internal: False #If Don't Want to See UART Receive Data, Set To True
+    filters:
+      - lambda: |-
+          static std::string last;
+          if (x == last)
+            return {};
+          last = x;
+          return x;
     on_value:
       lambda: |-
         if (id(LD1125F_UART_Text).state.substr(0,3) == "occ") {
@@ -247,15 +254,14 @@ sensor:
     unit_of_measurement: "m"
     accuracy_decimals: 2
     filters:    # Use Fliter To Debounce
-    - sliding_window_moving_average:
-        window_size: 8
-        send_every: 2
-    - heartbeat: 0.2s
+      - delta: 0%
   - platform: bh1750
     name: "Illuminance"
     accuracy_decimals: 1
     id: bh1750_light
     update_interval: 1s
+    filters:
+      - delta: 0.1
 
 light:
   - platform: status_led
@@ -415,4 +421,3 @@ number:
     min_value: 0.5
     max_value: 10
     step: 0.5
-
