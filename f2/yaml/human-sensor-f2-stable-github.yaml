@@ -165,7 +165,7 @@ text_sensor:
             id(LD1125F_Distance).publish_state(0);
           }
           if ((id(LD1125F_Clearence_Status) = false) || (id(LD1125F_Occupancy).state != "Clearance")) {
-            id(LD1125F_Occupancy).publish_state("'Clearance");
+            id(LD1125F_Occupancy).publish_state("Clearance");
             id(LD1125F_Clearence_Status) = true;
           }
           if (id(LD1125F_MovOcc_Binary).state == true) {
