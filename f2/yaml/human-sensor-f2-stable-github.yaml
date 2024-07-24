@@ -182,7 +182,7 @@ text_sensor:
         if (uart_text.length() > 3) {
           uart_state = id(LD1125F_UART_Text).state.substr(0,3);
           if (uart_text.length() >= 9) {
-            if (uart_state == "occ" || uart_state =="mov") {
+            if (uart_state == "occ" || uart_state == "mov") {
               distance = std::stof(uart_text.substr(9));
             }
           }
@@ -367,7 +367,7 @@ number:
     optimistic: true
     entity_category: config
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "60.0" #Default mth1 Setting
+    initial_value: 60 #Default mth1 Setting
     min_value: 10.0
     max_value: 600.0
     step: 5.0
@@ -385,7 +385,7 @@ number:
     optimistic: true
     entity_category: config
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "30" #Default mth2 Setting
+    initial_value: 30 #Default mth2 Setting
     min_value: 5
     max_value: 300
     step: 5
@@ -403,7 +403,7 @@ number:
     entity_category: config
     optimistic: true
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "20" #Default mth3 Setting
+    initial_value: 20 #Default mth3 Setting
     min_value: 5
     max_value: 200
     step: 5
@@ -422,7 +422,7 @@ number:
     optimistic: true
     unit_of_measurement: m
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "8" #Default rmax Setting
+    initial_value: 8 #Default rmax Setting
     min_value: 0.4
     max_value: 12
     step: 0.2
@@ -440,7 +440,7 @@ number:
     optimistic: true
     entity_category: config
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "5" #LD1125F Mov/Occ > Clearence Time Here
+    initial_value: 5 #LD1125F Mov/Occ > Clearence Time Here
     min_value: 0.5
     max_value: 20
     step: 0.5
@@ -451,7 +451,7 @@ number:
     optimistic: true
     entity_category: config
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "1" #LD1125F Mov > Occ Time Here
+    initial_value: 1 #LD1125F Mov > Occ Time Here
     min_value: 0.5
     max_value: 10
     step: 0.5
