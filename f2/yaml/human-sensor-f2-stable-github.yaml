@@ -190,7 +190,7 @@ text_sensor:
 
         if (uart_state == "occ" && distance > 0) {
           id(LD1125F_Distance).publish_state(distance);
-          if ((time(NULL)-id(LD1125F_Last_Mov_Time))>id(LD1125F_Mov_Time).state) {
+          if ((time(NULL)-id(LD1125F_Last_Mov_Time)) >= id(LD1125F_Mov_Time).state) {
             id(LD1125F_Occupancy).publish_state("Occupancy");
             if (id(LD1125F_MovOcc_Binary).state == false) {
               id(LD1125F_MovOcc_Binary).publish_state(true);
@@ -227,7 +227,6 @@ text_sensor:
     id: LD1125F_Occupancy
     icon: "mdi:motion-sensor"
 
-
 binary_sensor:
   - platform: status
     name: Online
@@ -236,10 +235,12 @@ binary_sensor:
     name: ${upper_devicename} Occupancy or Movement
     id: LD1125F_MovOcc_Binary
     device_class: occupancy
+    publish_initial_state: True
   - platform: template
     name: ${upper_devicename} Movement
     id: LD1125F_Mov_Binary
     device_class: motion
+    publish_initial_state: True
 
 sensor:
   - platform: template
@@ -284,7 +285,9 @@ sensor:
     icon: "mdi:signal-distance-variant"
     unit_of_measurement: "m"
     accuracy_decimals: 2
+    update_interval: 0.2s
     filters:    # Use Fliter To Debounce
+      #- heartbeat: 0.2s
       #- sliding_window_moving_average:
       #    window_size: 8
       #    send_every: 2
@@ -346,7 +349,7 @@ interval:
     setup_priority: -200
     then:
       lambda: |-
-        if ((time(NULL)-id(LD1125F_Last_Time))>id(LD1125F_Clear_Time).state) {
+        if ((time(NULL)-id(LD1125F_Last_Time)) >= id(LD1125F_Clear_Time).state) {
           if ((id(LD1125F_Clearence_Status) == false) || (id(LD1125F_Occupancy).state != "Clearance")) {
             id(LD1125F_Occupancy).publish_state("Clearance");
             id(LD1125F_Clearence_Status) = true;
