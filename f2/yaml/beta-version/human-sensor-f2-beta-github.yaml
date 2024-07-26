@@ -21,6 +21,11 @@ esphome:
       then:
         lambda: |-
           id(cpu_speed) = ESP.getCpuFreqMHz();
+    - priority: 300
+      then:
+        # 写入版本号，未来使用公共变量！(23年7月17日_13时29分_)
+        lambda: |-
+          id(screek_version).publish_state("V24.7.4_beta");
     - priority: -200
       then:
         - uart.write:
@@ -138,6 +143,13 @@ web_server:
   port: 80
   
 text_sensor:
+  - platform: template
+    name: "SCREEK Version"
+    id: screek_version
+    icon: mdi:information-outline
+    entity_category: "diagnostic"
+    update_interval: never
+    
   - platform: debug
     reset_reason:
       name: "ESP Reset Reason"
@@ -373,6 +385,10 @@ number:
             data: !lambda |-
               std::string th1st = "mth1=" + str_sprintf("%.0f",x) +"\r\n";
               return std::vector<uint8_t>(th1st.begin(), th1st.end());
+        - delay: 100ms
+        - uart.write: # save
+            id: LD1125F_UART_BUS
+            data: "save\r\n"
   - platform: template
     name: ${upper_devicename} mth2 #mth2 is 2.8~8m Sensitivity.
     id: LD1125F_mth2
@@ -391,8 +407,8 @@ number:
             data: !lambda |-
               std::string th2st = "mth2=" + str_sprintf("%.0f",x) +"\r\n";
               return std::vector<uint8_t>(th2st.begin(), th2st.end());
-        - delay: 200ms
-        - uart.write: # 保存用
+        - delay: 100ms
+        - uart.write: # save
             id: LD1125F_UART_BUS
             data: "save\r\n"
   - platform: template
@@ -413,8 +429,8 @@ number:
             data: !lambda |-
               std::string th3st = "mth3=" + str_sprintf("%.0f",x) +"\r\n";
               return std::vector<uint8_t>(th3st.begin(), th3st.end());
-        - delay: 200ms
-        - uart.write: # 保存用
+        - delay: 100ms
+        - uart.write: # save
             id: LD1125F_UART_BUS
             data: "save\r\n"
   - platform: template
@@ -436,8 +452,8 @@ number:
             data: !lambda |-
               std::string rmaxst = "rmax=" + str_sprintf("%.1f",x) +"\r\n";
               return std::vector<uint8_t>(rmaxst.begin(), rmaxst.end());
-        - delay: 200ms
-        - uart.write: # 保存用
+        - delay: 100ms
+        - uart.write: # save
             id: LD1125F_UART_BUS
             data: "save\r\n"
   - platform: template
@@ -459,8 +475,8 @@ number:
             data: !lambda |-
               std::string utonsst = "utons=" + std::to_string(x) + "\r\n";
               return std::vector<uint8_t>(utonsst.begin(), utonsst.end());
-        - delay: 200ms
-        - uart.write: # 保存用
+        - delay: 100ms
+        - uart.write: # save
             id: LD1125F_UART_BUS
             data: "save\r\n"
   - platform: template
