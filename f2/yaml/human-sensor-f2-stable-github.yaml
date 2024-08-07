@@ -1,6 +1,6 @@
 # screek f2 yaml code
 # main ld1125h code from: https://github.com/patrick3399/Hi-Link_mmWave_Radar_ESPHome
-# 
+#
 substitutions:
   devicename: ""
   upper_devicename: ""
@@ -13,7 +13,7 @@ esphome:
   platformio_options:
     board_build.flash_mode: dio
     # board_build.f_cpu: 80000000L
-  project: 
+  project:
     name: Screek.Human_Presence_Sensor
     version: F2
   on_boot:
@@ -57,7 +57,7 @@ external_components:
       type: git
       url: https://github.com/ssieb/custom_components #Thanks for @ssieb components.
     components: [ serial ]
-  
+
 esp32:
   board: lolin_c3_mini
   framework:
@@ -96,8 +96,10 @@ globals:
     initial_value: "false"
 
 improv_serial:
-  
+
 logger:
+  logs:
+    bh1750.sensor: INFO
 
 debug:
   update_interval: 30s
@@ -123,7 +125,7 @@ captive_portal:
 
 web_server:
   port: 80
-  
+
 text_sensor:
   - platform: debug
     reset_reason:
@@ -148,11 +150,47 @@ text_sensor:
     icon: "mdi:format-text"
     entity_category: "diagnostic"
     internal: False #If Don't Want to See UART Receive Data, Set To True
+    filters:
+      - lambda: |-
+          static std::string last;
+          if (x == last)
+            return {};
+          last = x;
+          return x;
     on_value:
       lambda: |-
-        if (id(LD1125F_UART_Text).state.substr(0,3) == "occ") {
-          id(LD1125F_Distance).publish_state(atof(id(LD1125F_UART_Text).state.substr(9).c_str()));
-          if ((time(NULL)-id(LD1125F_Last_Mov_Time))>id(LD1125F_Mov_Time).state) {
+        std::string uart_text = id(LD1125F_UART_Text).state;
+        if (uart_text == "null") {
+          if (id(LD1125F_Distance).state != 0) {
+            id(LD1125F_Distance).publish_state(0);
+          }
+          if ((id(LD1125F_Clearence_Status) = false) || (id(LD1125F_Occupancy).state != "Clearance")) {
+            id(LD1125F_Occupancy).publish_state("Clearance");
+            id(LD1125F_Clearence_Status) = true;
+          }
+          if (id(LD1125F_MovOcc_Binary).state == true) {
+            id(LD1125F_MovOcc_Binary).publish_state(false);
+          }
+          if (id(LD1125F_Mov_Binary).state == true) {
+            id(LD1125F_Mov_Binary).publish_state(false);
+          }
+          return;
+        }
+
+        float distance = -1;
+        std::string uart_state = "";
+        if (uart_text.length() > 3) {
+          uart_state = id(LD1125F_UART_Text).state.substr(0,3);
+          if (uart_text.length() >= 9) {
+            if (uart_state == "occ" || uart_state == "mov") {
+              distance = std::stof(uart_text.substr(9));
+            }
+          }
+        }
+
+        if (uart_state == "occ" && distance > 0) {
+          id(LD1125F_Distance).publish_state(distance);
+          if ((time(NULL)-id(LD1125F_Last_Mov_Time)) >= id(LD1125F_Mov_Time).state) {
             id(LD1125F_Occupancy).publish_state("Occupancy");
             if (id(LD1125F_MovOcc_Binary).state == false) {
               id(LD1125F_MovOcc_Binary).publish_state(true);
@@ -169,8 +207,8 @@ text_sensor:
             id(LD1125F_Clearence_Status) = false;
           }
         }
-        else if (id(LD1125F_UART_Text).state.substr(0,3) == "mov") {
-          id(LD1125F_Distance).publish_state(atof(id(LD1125F_UART_Text).state.substr(9).c_str()));
+        else if (uart_state == "mov" && distance > 0) {
+          id(LD1125F_Distance).publish_state(distance);
           id(LD1125F_Occupancy).publish_state("Movement");
           if (id(LD1125F_MovOcc_Binary).state == false) {
             id(LD1125F_MovOcc_Binary).publish_state(true);
@@ -189,7 +227,6 @@ text_sensor:
     id: LD1125F_Occupancy
     icon: "mdi:motion-sensor"
 
-
 binary_sensor:
   - platform: status
     name: Online
@@ -198,10 +235,12 @@ binary_sensor:
     name: ${upper_devicename} Occupancy or Movement
     id: LD1125F_MovOcc_Binary
     device_class: occupancy
+    publish_initial_state: True
   - platform: template
     name: ${upper_devicename} Movement
     id: LD1125F_Mov_Binary
     device_class: motion
+    publish_initial_state: True
 
 sensor:
   - platform: template
@@ -226,7 +265,7 @@ sensor:
     name: ESP Uptime
     id: sys_uptime
     update_interval: 60s
-  - platform: wifi_signal 
+  - platform: wifi_signal
     name: RSSI
     id: wifi_signal_db
     update_interval: 60s
@@ -246,16 +285,20 @@ sensor:
     icon: "mdi:signal-distance-variant"
     unit_of_measurement: "m"
     accuracy_decimals: 2
+    update_interval: 0.2s
     filters:    # Use Fliter To Debounce
-    - sliding_window_moving_average:
-        window_size: 8
-        send_every: 2
-    - heartbeat: 0.2s
+      #- heartbeat: 0.2s
+      #- sliding_window_moving_average:
+      #    window_size: 8
+      #    send_every: 2
+      - delta: 0%
   - platform: bh1750
     name: "Illuminance"
     accuracy_decimals: 1
     id: bh1750_light
     update_interval: 1s
+    filters:
+      - delta: 0.1
 
 light:
   - platform: status_led
@@ -306,7 +349,7 @@ interval:
     setup_priority: -200
     then:
       lambda: |-
-        if ((time(NULL)-id(LD1125F_Last_Time))>id(LD1125F_Clear_Time).state) {
+        if ((time(NULL)-id(LD1125F_Last_Time)) >= id(LD1125F_Clear_Time).state) {
           if ((id(LD1125F_Clearence_Status) == false) || (id(LD1125F_Occupancy).state != "Clearance")) {
             id(LD1125F_Occupancy).publish_state("Clearance");
             id(LD1125F_Clearence_Status) = true;
@@ -327,7 +370,7 @@ number:
     optimistic: true
     entity_category: config
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "60.0" #Default mth1 Setting
+    initial_value: 60 #Default mth1 Setting
     min_value: 10.0
     max_value: 600.0
     step: 5.0
@@ -345,7 +388,7 @@ number:
     optimistic: true
     entity_category: config
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "30" #Default mth2 Setting
+    initial_value: 30 #Default mth2 Setting
     min_value: 5
     max_value: 300
     step: 5
@@ -363,7 +406,7 @@ number:
     entity_category: config
     optimistic: true
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "20" #Default mth3 Setting
+    initial_value: 20 #Default mth3 Setting
     min_value: 5
     max_value: 200
     step: 5
@@ -382,7 +425,7 @@ number:
     optimistic: true
     unit_of_measurement: m
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "8" #Default rmax Setting
+    initial_value: 8 #Default rmax Setting
     min_value: 0.4
     max_value: 12
     step: 0.2
@@ -400,7 +443,7 @@ number:
     optimistic: true
     entity_category: config
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "5" #LD1125F Mov/Occ > Clearence Time Here
+    initial_value: 5 #LD1125F Mov/Occ > Clearence Time Here
     min_value: 0.5
     max_value: 20
     step: 0.5
@@ -411,8 +454,7 @@ number:
     optimistic: true
     entity_category: config
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "1" #LD1125F Mov > Occ Time Here
+    initial_value: 1 #LD1125F Mov > Occ Time Here
     min_value: 0.5
     max_value: 10
     step: 0.5
-
