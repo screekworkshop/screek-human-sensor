@@ -1,6 +1,6 @@
 # screek f2 yaml code
 # main ld1125h code from: https://github.com/patrick3399/Hi-Link_mmWave_Radar_ESPHome
-# 
+#
 substitutions:
   devicename: ""
   upper_devicename: ""
@@ -13,7 +13,7 @@ esphome:
   platformio_options:
     board_build.flash_mode: dio
     # board_build.f_cpu: 80000000L
-  project: 
+  project:
     name: Screek.Human_Presence_Sensor
     version: F2
   on_boot:
@@ -23,9 +23,8 @@ esphome:
           id(cpu_speed) = ESP.getCpuFreqMHz();
     - priority: 300
       then:
-        # 写入版本号，未来使用公共变量！(23年7月17日_13时29分_)
         lambda: |-
-          id(screek_version).publish_state("V24.7.4_beta");
+          id(screek_version).publish_state("Beta_V240708_1");
     - priority: -200
       then:
         - uart.write:
@@ -75,7 +74,7 @@ external_components:
       type: git
       url: https://github.com/ssieb/custom_components #Thanks for @ssieb components.
     components: [ serial ]
-  
+
 esp32:
   board: lolin_c3_mini
   framework:
@@ -114,8 +113,10 @@ globals:
     initial_value: "false"
 
 improv_serial:
-  
+
 logger:
+  logs:
+    bh1750.sensor: INFO
 
 debug:
   update_interval: 30s
@@ -141,7 +142,7 @@ captive_portal:
 
 web_server:
   port: 80
-  
+
 text_sensor:
   - platform: template
     name: "SCREEK Version"
@@ -173,6 +174,13 @@ text_sensor:
     icon: "mdi:format-text"
     entity_category: "diagnostic"
     internal: False #If Don't Want to See UART Receive Data, Set To True
+    filters:
+      - lambda: |-
+          static std::string last;
+          if (x == last)
+            return {};
+          last = x;
+          return x;
     on_value:
       lambda: |-
         std::string uart_text = id(LD1125F_UART_Text).state;        
@@ -183,10 +191,10 @@ text_sensor:
 
         float distance = -1;
         std::string uart_state = "";
-        if (uart_text.length() > 3){
+        if (uart_text.length() > 3) {
           uart_state = id(LD1125F_UART_Text).state.substr(0,3);
           if (uart_text.length() >= 9) {
-            if (uart_state == "occ" || uart_state =="mov") {
+            if (uart_state == "occ" || uart_state == "mov") {
               distance = std::stof(uart_text.substr(9));
             }
           }
@@ -194,7 +202,7 @@ text_sensor:
 
         if (uart_state == "occ" && distance > 0) {
           id(LD1125F_Distance).publish_state(distance);
-          if ((time(NULL)-id(LD1125F_Last_Mov_Time))>id(LD1125F_Mov_Time).state) {
+          if ((time(NULL)-id(LD1125F_Last_Mov_Time)) >= id(LD1125F_Mov_Time).state) {
             id(LD1125F_Occupancy).publish_state("Occupancy");
             if (id(LD1125F_MovOcc_Binary).state == false) {
               id(LD1125F_MovOcc_Binary).publish_state(true);
@@ -239,10 +247,12 @@ binary_sensor:
     name: ${upper_devicename} Occupancy or Movement
     id: LD1125F_MovOcc_Binary
     device_class: occupancy
+    publish_initial_state: True
   - platform: template
     name: ${upper_devicename} Movement
     id: LD1125F_Mov_Binary
     device_class: motion
+    publish_initial_state: True
 
 sensor:
   - platform: template
@@ -259,7 +269,7 @@ sensor:
     id: sys_esp_temperature
     name: ESP Temperature
     lambda: return temperatureRead();
-    unit_of_measurement: °C
+    unit_of_measurement: "°C"
     device_class: TEMPERATURE
     update_interval: 45s
     entity_category: "diagnostic"
@@ -267,7 +277,7 @@ sensor:
     name: ESP Uptime
     id: sys_uptime
     update_interval: 60s
-  - platform: wifi_signal 
+  - platform: wifi_signal
     name: RSSI
     id: wifi_signal_db
     update_interval: 60s
@@ -289,8 +299,8 @@ sensor:
     accuracy_decimals: 2
     # filters:    # Use Fliter To Debounce
     # - sliding_window_moving_average:
-    #     window_size: 8
-    #     send_every: 2
+      #    window_size: 8
+      #    send_every: 2
     # - heartbeat: 0.2s
   - platform: bh1750
     name: "Illuminance"
@@ -350,7 +360,6 @@ interval:
     then:
       lambda: |-
         if ((time(NULL)-id(LD1125F_Last_Time))>id(LD1125F_Clear_Time).state) {
-          // 清理距离。
           if (id(LD1125F_Distance).state != 0){
             id(LD1125F_Distance).publish_state(0);
           }
@@ -501,4 +510,3 @@ number:
     min_value: 0.5
     max_value: 10
     step: 0.5
-
