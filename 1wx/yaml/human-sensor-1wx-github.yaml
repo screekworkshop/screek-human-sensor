@@ -14,7 +14,7 @@ external_components:
       type: git
       url: https://github.com/screekworkshop/custom_components_support_for_screek_1w
       ref: main
-    components: [esp32, uart, ld2410]
+    components: [uart, ld2410]
   
 esp32:
   board: esp32-c3-devkitm-1

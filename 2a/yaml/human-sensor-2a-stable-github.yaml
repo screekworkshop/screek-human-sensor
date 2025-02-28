@@ -33,7 +33,7 @@ external_components:
       type: git
       url: https://github.com/screekworkshop/custom_components_support_for_screek_2a
       ref: main
-    components: [esp32, uart]
+    components: [uart]
   
 esp32:
   board: lolin_c3_mini
@@ -74,9 +74,12 @@ debug:
 api:
 
 ota:
-  # use your own ota password plz. this is a words by Socrates.
-  password: "all-things-in-their-being-are-good-for-something"
-  safe_mode: False
+  - platform: esphome
+    # use your own ota password plz. this is a words by Socrates.
+    password: "all-things-in-their-being-are-good-for-something"
+
+safe_mode:
+  disabled: True
 
 wifi:
   power_save_mode: LIGHT
@@ -863,7 +866,9 @@ sensor:
 light:
   - platform: status_led
     name: sys_status
-    pin: GPIO13
+    pin: 
+      number: GPIO13
+      ignore_pin_validation_error: true
     internal: True
     restore_mode: ALWAYS_OFF
   - platform: binary
@@ -879,7 +884,9 @@ time:
 output:
   - platform: gpio
     id: board_info_ed
-    pin: GPIO12
+    pin: 
+      number: GPIO12
+      ignore_pin_validation_error: true
 
 switch:
   - platform: factory_reset
