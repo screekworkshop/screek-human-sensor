@@ -322,7 +322,9 @@ i2c:
 output:
   - platform: gpio
     id: board_info_ed
-    pin: GPIO12
+    pin: 
+      number: GPIO12
+      ignore_pin_validation_error: true
 
 switch:
   - platform: factory_reset
