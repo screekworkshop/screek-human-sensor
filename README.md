@@ -8,6 +8,9 @@ Consider the current privacy so extravagant, and the severe dependence on cloud 
 If you would like to purchase one of our DIY products, or take a look at our documentation, feel free to visit   
 https://www.screek.io/  
 
+Our Store:
+https://store.screek.io
+
 Our eBay Store:  
 https://www.ebay.com/str/screekworkshop  
 
