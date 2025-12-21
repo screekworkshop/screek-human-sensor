@@ -7,7 +7,7 @@ esphome:
     board_build.flash_mode: dio
   project: 
     name: SCREEK.Human Sensor L12
-    version: 25.12.21-A
+    version: 25.12.21-B
 
 logger:
   # level: VERY_VERBOSE
@@ -28,10 +28,6 @@ esp32:
   framework:
     type: esp-idf
 globals:
-  - id: cpu_speed
-    type: int
-    restore_value: no
-    initial_value: '0'
   - id: last_illuminance
     type: float
     restore_value: no
@@ -113,16 +109,6 @@ binary_sensor:
       name: Still Target
 
 sensor:
-  - platform: template
-    name: "ESP CPU Speed"
-    accuracy_decimals: 0
-    icon: mdi:cpu-32-bit
-    unit_of_measurement: Mhz
-    disabled_by_default: True
-    lambda: |-
-      return (id(cpu_speed));
-    entity_category: "diagnostic"
-    update_interval: 600s
   - platform: internal_temperature
     name: "ESP Temperature"
     unit_of_measurement: °C
