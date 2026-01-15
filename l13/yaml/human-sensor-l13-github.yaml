@@ -33,14 +33,14 @@ external_components:
       type: git
       url: https://github.com/screekworkshop/custom_components_support_for_screek_l12
       ref: main
-    components: [uart, ld2412]
+    components: [ld2412]
 
 esp32:
   board: lolin_c3_mini
   framework:
     type: arduino
-    version: 2.0.9
-    platform_version: 6.3.0
+    # version: 2.0.9
+    # platform_version: 6.3.0
 
 globals:
   - id: cpu_speed
@@ -79,9 +79,7 @@ safe_mode:
   disabled: true
 
 wifi:
-  # output_power: 15dB
-  power_save_mode: LIGHT
-  # power_save_mode: NONE
+  # power_save_mode: LIGHT
   reboot_timeout: 10min
   ap:
     ssid: "HUMAN-SENSOR L13"
